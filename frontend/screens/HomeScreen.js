@@ -23,7 +23,7 @@ import { responsiveStyles } from '../styles/responsiveStyles.js';
 const { width, height } = Dimensions.get('window');
 const placeholderSmall = require('../assets/placeholder_small.png');
 // Asegúrate de que la ruta al banner sea correcta
-const bannerImage = require('../assets/banner_ferroviario.jpg'); // <-- Referencia a la imagen del banner
+const bannerImage = require('../assets/banner_ferroviario.jpg'); // <-- Temporal: usar imagen existente
 
 const HomeScreen = ({ navigation }) => {
   const [selectedMode, setSelectedMode] = useState('normal');
@@ -133,7 +133,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleOpenCamera = () => {
-    navigation.navigate('Cámara', { screen: 'CameraCapture' });
+    navigation.navigate('Escanear', { screen: 'CameraCapture' });
   };
 
   const handleOpenPieceDetails = (piece) => {
@@ -173,7 +173,7 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.actionContainer}>
           <Button
-            title="Escanear Pieza"
+            title="Escanear Monumento"
             icon={<Ionicons name="camera-outline" size={20} style={{ marginRight: 8 }} color="#fff" />}
             onPress={handleOpenCamera}
             buttonStyle={[styles.scanButton, responsiveStyles.responsiveButtonLarge]}
@@ -203,7 +203,7 @@ const HomeScreen = ({ navigation }) => {
 
         {recentPieces.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Vistos Recientemente</Text>
+            <Text style={styles.sectionTitle}>Monumentos Visitados</Text>
             <View style={styles.recentPiecesContainer}>
               {recentPieces.map((p, i) => {
                  const uri = p.imageUri;
@@ -226,7 +226,7 @@ const HomeScreen = ({ navigation }) => {
         )}
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2025 Guía Ferroviaria</Text>
+          <Text style={styles.footerText}>© 2025 Guía Parque Europa</Text>
         </View>
 
       </ScrollView>

@@ -431,7 +431,7 @@ export default function CameraScreen() {
               </View>
               <View style={styles.guideContainer}>
                 <Text style={styles.guideText}>
-                  Centra el monumento y toca para capturar
+                  Centra el monumento europeo y toca para capturar
                 </Text>
               </View>
             </View>
@@ -495,7 +495,7 @@ export default function CameraScreen() {
             </View>
             <View style={styles.guideContainer}>
               <Text style={styles.guideText}>
-                Centra el monumento y toca para capturar
+                Centra el monumento europeo y toca para capturar
               </Text>
             </View>
           </View>

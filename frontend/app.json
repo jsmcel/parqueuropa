@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "guideitor",
-    "slug": "guideitor",
+    "name": "Guía Parque Europa",
+    "slug": "guia-parque-europa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/favicon.png",
@@ -25,7 +25,7 @@
       "permissions": [
         "android.permission.CAMERA"
       ],
-      "package": "com.joscelino.guideitor"
+      "package": "com.joscelino.guiaparqueeuropa"
     },
     "web": {
       "favicon": "./assets/favicon.png"

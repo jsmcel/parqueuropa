@@ -268,8 +268,8 @@ const ResultScreen = ({ route, navigation }) => {
     if (!pieceName) return;
     try {
       await Share.share({
-        message: `¡Descubrí la pieza "${pieceName}" en el Museo del Ferrocarril con la app Guía Ferroviaria! #MuseoFerrocarril`,
-        title: `Pieza: ${pieceName}`
+        message: `¡Descubrí el monumento "${pieceName}" en el Parque Europa con la app Guía Parque Europa! #ParqueEuropa`,
+        title: `Monumento: ${pieceName}`
       });
     } catch (error) {
       console.error('Error al compartir:', error);
@@ -364,7 +364,7 @@ const ResultScreen = ({ route, navigation }) => {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={60} color={config.COLORS.SECONDARY || 'red'} />
           <Text style={styles.errorTitle}>Información no disponible</Text>
-          <Text style={styles.errorText}>No se recibió un nombre de pieza válido.</Text>
+          <Text style={styles.errorText}>No se recibió un nombre de monumento válido.</Text>
           <Button
             title="Volver"
             buttonStyle={styles.errorButton}

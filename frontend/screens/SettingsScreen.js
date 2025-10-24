@@ -417,10 +417,10 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>Descargo de Responsabilidad</Text>
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerText}>
-              Esta aplicación no es oficial del Museo del Ferrocarril de Madrid ni está afiliada, patrocinada o respaldada por la Fundación de los Ferrocarriles Españoles (FFE).
+              Esta aplicación no es oficial del Parque Europa de Torrejón de Ardoz ni está afiliada, patrocinada o respaldada por el Ayuntamiento de Torrejón de Ardoz.
             </Text>
             <Text style={styles.disclaimerText}>
-              La información proporcionada es de carácter educativo y recreativo. Para información oficial, horarios actualizados y servicios del museo, consulta su sitio web oficial.
+              La información proporcionada es de carácter educativo y recreativo. Para información oficial, horarios actualizados y servicios del parque, consulta su sitio web oficial.
             </Text>
           </View>
         </View>

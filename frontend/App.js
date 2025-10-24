@@ -23,16 +23,16 @@ const RootStack = createStackNavigator(); // Stack principal
 const Tab = createBottomTabNavigator();
 const CameraStackNav = createStackNavigator(); // Stack solo para el flujo de cámara
 
-// Componente SplashScreen (sin cambios)
+// Componente SplashScreen para Parque Europa
 const CustomSplashScreen = () => (
   <View style={styles.splashContainer}>
     <Image
-      source={require('./assets/splash_ferroviaria.png')}
+      source={require('./assets/splash.png')}
       style={styles.splashImage}
       resizeMode="contain"
     />
-    <Text style={[styles.splashText, { fontFamily: 'railway' }]}>Guía Ferroviaria</Text>
-    <Text style={[styles.splashSubtext, { fontFamily: 'industrial' }]}>Descubre la historia del ferrocarril</Text>
+    <Text style={[styles.splashText, { fontFamily: 'railway' }]}>Guía Parque Europa</Text>
+    <Text style={[styles.splashSubtext, { fontFamily: 'industrial' }]}>Descubre Europa en Torrejón de Ardoz</Text>
   </View>
 );
 
@@ -51,7 +51,7 @@ const MainTabNavigator = () => (
       tabBarIcon: ({ focused, color, size }) => {
         let iconName;
         if (route.name === 'Inicio') iconName = focused ? 'home' : 'home-outline';
-        else if (route.name === 'Cámara') iconName = focused ? 'camera' : 'camera-outline';
+        else if (route.name === 'Escanear') iconName = focused ? 'camera' : 'camera-outline';
         else if (route.name === 'Ajustes') iconName = focused ? 'settings' : 'settings-outline';
         return <Ionicons name={iconName} size={size} color={color} />;
       },
@@ -64,8 +64,8 @@ const MainTabNavigator = () => (
     })}
   >
     <Tab.Screen name="Inicio" component={HomeScreen} />
-    {/* La pestaña Cámara ahora solo lleva al stack de la cámara */}
-    <Tab.Screen name="Cámara" component={CameraStack} />
+    {/* La pestaña Escanear ahora solo lleva al stack de la cámara */}
+    <Tab.Screen name="Escanear" component={CameraStack} />
     <Tab.Screen name="Ajustes" component={SettingsScreen} />
   </Tab.Navigator>
 );
@@ -138,7 +138,7 @@ export default function App() {
             component={SuggestionScreen}
             options={{
               headerShown: true, // Or false, depending on desired UI
-              title: 'Seleccionar Identificación', // Example title if header is shown
+              title: 'Seleccionar Monumento', // Example title if header is shown
               // Optional: Add custom animations like for ResultScreen if desired
               // cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
             }}

@@ -20,13 +20,13 @@ const SuggestionScreen = () => {
     return null;
   }
 
-  const handleSelectSuggestion = (selectedPiece) => {
+  const handleSelectSuggestion = (selectedMonument) => {
     navigation.replace('ResultScreen', {
       imageUri: imageUri,
       imageBase64: imageBase64,
       recognitionResult: {
-        pieceName: selectedPiece.pieceName,
-        confidence: selectedPiece.confidence,
+        pieceName: selectedMonument.pieceName,
+        confidence: selectedMonument.confidence,
         userSelected: true,
       },
     });
