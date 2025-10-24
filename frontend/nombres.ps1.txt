@@ -1,0 +1,194 @@
+#
+.SYNOPSIS
+Organiza y renombra archivos MP3 basados en un archivo JSON de etiquetas y reglas específicas.
+Mueve archivos a una carpeta base, aplica nombres de clase exactos del JSON y estandariza modos.
+
+.DESCRIPTION
+1. Lee nombres de etiquetas (label_names) desde un archivo JSON.
+2. Busca recursivamente archivos .mp3 en un directorio base.
+3. Para cada .mp3
+    - Intenta extraer un modo existente (EXPERTO, INFANTIL, NORMAL, SERIA, CACHONDO, CACHONDA) del nombre.
+    - Aplica reglas de mapeo de modo (SERIA-NORMAL, CACHONDAO-CACHONDO, sin modo-EXPERTO).
+    - Intenta encontrar la etiqueta exacta del JSON correspondiente al archivo (comparando nombre base o carpeta padre).
+    - Construye el nombre de archivo final como 'NombreClaseExactoJSON-MODOMAYUSCULAS.mp3'.
+    - MueveRenombra el archivo a la carpeta base con el nuevo nombre.
+4. Reporta archivos no mapeados o conflictos.
+
+.NOTES
+- ¡¡ASEGÚRATE DE TENER UNA COPIA DE SEGURIDAD ANTES DE EJECUTAR!!
+- Las rutas ya están configuradas según lo solicitado.
+- ESTA VERSIÓN EJECUTA LOS CAMBIOS DIRECTAMENTE (SIN -WhatIf en Move-Item).
+#
+
+# --- CONFIGURACIÓN Rutas Proporcionadas ---
+$rutaBase = CUsersjsmce.cursorguideitor_PRODpaquete_final_feedbackbackendpublicaudio
+$jsonPath = CUsersjsmce.cursorguideitor_PRODpaquete_final_feedbackbackendembeddingsdataset_embeddings.json
+# --- FIN CONFIGURACIÓN ---
+
+# Validar que la ruta base existe
+if (-not (Test-Path $rutaBase -PathType Container)) {
+    Write-Error La ruta base '$rutaBase' no existe o no es un directorio. Verifica la ruta.
+    exit
+}
+# Validar que el JSON existe
+if (-not (Test-Path $jsonPath -PathType Leaf)) {
+    Write-Error El archivo JSON '$jsonPath' no existe o no es un archivo. Verifica la ruta.
+    exit
+}
+
+
+# --- 1. Leer y Procesar Labels del JSON ---
+Write-Host Leyendo archivo JSON $jsonPath -ForegroundColor Cyan
+try {
+    $jsonContent = Get-Content -Path $jsonPath -Raw -ErrorAction Stop  ConvertFrom-Json -ErrorAction Stop
+    $labelNames = $jsonContent.label_names
+    if ($null -eq $labelNames -or $labelNames.Count -eq 0) {
+        Write-Error No se encontraron 'label_names' en el archivo JSON o el archivo está vacío.
+        exit
+    }
+} catch {
+    Write-Error Error al leer o procesar el archivo JSON en '$jsonPath'. Verifica la ruta y el formato del JSON.
+    Write-Error $_.Exception.Message
+    exit
+}
+
+# Crear diccionario para mapeo Clave Normalizada - Nombre Exacto JSON
+$labelMap = @{}
+Write-Host Creando mapa de etiquetas...
+foreach ($label in $labelNames) {
+    # Clave normalizada minúsculas, sin espacios ni guiones (solo para buscar coincidencias)
+    $normalizedKey = $label.ToLower() -replace '[s-]+', ''
+    if ($normalizedKey -eq ) { continue } # Ignorar si la normalización queda vacía
+
+    if (-not $labelMap.ContainsKey($normalizedKey)) {
+        $labelMap[$normalizedKey] = $label # Guardamos el nombre exacto
+        # Write-Host   '$normalizedKey' - '$label' -ForegroundColor Gray
+    } else {
+        Write-Warning Label normalizado duplicado para clave 'span class=math-inlinenormalizedKey'. Originales 'span($labelMap[$normalizedKey])', 'span class=math-inlinelabel'. Se usará el primero ('span($labelMap[$normalizedKey])').
+    }
+}
+Write-Host Mapa creado con $($labelMap.Count) entradas únicas. -ForegroundColor Green
+
+# --- 2. Procesar Archivos MP3 ---
+Write-Host Buscando archivos .mp3 en '$rutaBase'... -ForegroundColor Cyan
+$archivosMp3 = Get-ChildItem -Path $rutaBase -Recurse -Filter .mp3
+
+Write-Host Procesando $($archivosMp3.Count) archivos encontrados...
+$contadorProcesados = 0
+$contadorErrores = 0
+$contadorConflictos = 0
+$contadorNoMapeados = 0
+
+foreach ($archivoActual in $archivosMp3) {
+    $rutaCompletaActual = $archivoActual.FullName
+    $nombreBaseOriginal = $archivoActual.BaseName # Nombre sin extensión
+    $directorioPadre = $archivoActual.Directory
+
+    # Ignorar la carpeta 'sin_clasificar' si la creamos
+    if ($directorioPadre.FullName.StartsWith((Join-Path $rutaBase sin_clasificar))) {
+         Write-Host Ignorando archivo en carpeta 'sin_clasificar' $($archivoActual.Name) -ForegroundColor DarkGray
+         continue
+    }
+
+    Write-Verbose Procesando $rutaCompletaActual
+
+    # --- 2a. Determinar Modo ---
+    $modoDetectadoOriginal = $null
+    $nombreSinModo = $nombreBaseOriginal # Nombre si le quitamos el modo detectado
+
+    # Regex para extraer modo al final, insensible a mayúsculas, con _ o -
+    if (span class=math-inlinenombreBaseOriginal -match '^(.)[_-](EXPERTOINFANTILNORMALSERIACACHONDOCACHONDA)span' -CaseInsensitive) {
+        $nombreSinModo = $matches[1].Trim() # Nombre base sin el modo
+        $modoDetectadoOriginal = $matches[2].ToUpper() # Modo detectado
+         Write-Verbose   Modo detectado del nombre $modoDetectadoOriginal
+    } else {
+        Write-Verbose   No se detectó modo explícito en el nombre.
+        # Si no hay modo explícito, el nombre completo se usa para buscar clase
+        $nombreSinModo = $nombreBaseOriginal
+    }
+
+    # Aplicar reglas de mapeo de modo
+    $modoFinal = $null
+    if ($null -ne $modoDetectadoOriginal) {
+        switch ($modoDetectadoOriginal) {
+            SERIA     { $modoFinal = NORMAL; break }
+            CACHONDA  { $modoFinal = CACHONDO; break }
+            CACHONDO  { $modoFinal = CACHONDO; break } # Ya está bien
+            NORMAL    { $modoFinal = NORMAL; break }   # Ya está bien
+            INFANTIL  { $modoFinal = INFANTIL; break } # Ya está bien
+            EXPERTO   { $modoFinal = EXPERTO; break }  # Ya está bien
+            default     {
+                            Write-Warning Modo 'span class=math-inlinemodoDetectadoOriginal' inesperado para archivo 'span($archivoActual.Name)'.
+                            # Decidir qué hacer, por ahora lo dejamos como EXPERTO por defecto
+                            $modoFinal = EXPERTO
+                        }
+        }
+    } else {
+        # Si no había modo detectado, es EXPERTO por defecto
+        $modoFinal = EXPERTO
+    }
+     Write-Verbose   Modo final asignado $modoFinal
+
+    # --- 2b. Determinar Clase (Label Exacto JSON) ---
+    $labelExactoEncontrado = $null
+
+    # Intenta buscar por nombre de archivo (sin modo) normalizado
+    $keyBusquedaNombre = $nombreSinModo.ToLower() -replace '[s-]+', ''
+    if ($keyBusquedaNombre -ne  -and $labelMap.ContainsKey($keyBusquedaNombre)) {
+        $labelExactoEncontrado = $labelMap[$keyBusquedaNombre]
+         Write-Verbose   Clase encontrada por nombre de archivo ('$keyBusquedaNombre') '$labelExactoEncontrado'
+    } else {
+         Write-Verbose   No se encontró clase por nombre de archivo ('$keyBusquedaNombre'). Intentando por directorio padre...
+        # Si no, intenta buscar por nombre de directorio padre normalizado
+        # Solo si el archivo está en una subcarpeta directa de $rutaBase (evitar procesar el propio $rutaBase)
+        if ($directorioPadre.FullName -ne $rutaBase) {
+             $keyBusquedaDir = $directorioPadre.Name.ToLower() -replace '[s-]+', ''
+             if ($keyBusquedaDir -ne  -and $labelMap.ContainsKey($keyBusquedaDir)) {
+                 $labelExactoEncontrado = $labelMap[$keyBusquedaDir]
+                  Write-Verbose   Clase encontrada por directorio padre ('$keyBusquedaDir') '$labelExactoEncontrado'
+             } else {
+                 Write-Verbose   No se encontró clase por directorio padre ('$keyBusquedaDir').
+             }
+        }
+    }
+
+    # --- 2c. Construir Nuevo Nombre y MoverRenombrar ---
+    if ($null -ne $labelExactoEncontrado -and $null -ne $modoFinal) {
+        # Construir nombre final según formato 'LabelExacto-MODO.mp3'
+        span class=math-inlinetargetFileName = span(span class=math-inlinelabelExactoEncontrado)-span($modoFinal).mp3
+        # Reemplazar caracteres inválidos en nombres de archivo Windows (, , , , , , , , ) con _ si aparecen en el label
+        $invalidChars = '[]'
+        $targetFileName = $targetFileName -replace $invalidChars, '_'
+
+        $targetPath = Join-Path $rutaBase $targetFileName
+
+        # Verificar si el destino es diferente al origen
+        if ($targetPath -eq span class=math-inlinerutaCompletaActual) {
+Write-Host Archivo 'span($archivoActual.Name)' ya está en el lugar y nombre correctos. Ignorando. -ForegroundColor DarkGray
+            $contadorProcesados++
+            continue
+        }
+
+        # Verificar conflictos (si el archivo destino ya existe Y NO es el mismo archivo origen)
+        if ((Test-Path $targetPath) -and ($targetPath -ne $rutaCompletaActual)) {
+            Write-Warning ¡Conflicto! El archivo destino 'span class=math-inlinetargetPath' ya existe. No se moverá ni renombrará 'span($archivoActual.Name)'.
+            $contadorConflictos++
+            span class=math-inlinecontadorErrores++
+} else {
+# Mover y renombrar (¡¡¡ SIN -WhatIf !!!)
+Write-Host MoviendoRenombrando 'span($archivoActual.Name)' a '$targetFileName' -ForegroundColor Yellow
+            try {
+                # ASEGÚRATE DE HABER HECHO COPIA DE SEGURIDAD
+                Move-Item -Path $rutaCompletaActual -Destination $targetPath -Force -ErrorAction Stop
+                span class=math-inlinecontadorProcesados++
+} catch {
+Write-Error Error al moverrenombrar 'span($archivoActual.Name)' a '$targetPath'.
+                Write-Error $_.Exception.Message
+                span class=math-inlinecontadorErrores++
+}
+}
+} else {
+# No se pudo mapear la clase
+Write-Warning No se pudo determinar la clase JSON para el archivo 'span($archivoActual.Name)' (Nombre base sin modo 'span class=math-inlinenombreSinModo', Carpeta 'span($directorioPadre.Name)'). Se ignora.
+        $contadorNoMapeados++
+        #
