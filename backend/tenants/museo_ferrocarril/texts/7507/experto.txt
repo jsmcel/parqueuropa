@@ -1,0 +1,17 @@
+La locomotora eléctrica RENFE 7507 pertenece a la serie 7500, fabricada por CAF (Construcciones y Auxiliar de Ferrocarriles) entre 1956 y 1958. Esta serie representó un hito en la electrificación del ferrocarril español.
+
+ESPECIFICACIONES TÉCNICAS:
+- Potencia: 2.400 kW
+- Tensión: 3.000 V CC
+- Velocidad máxima: 80 km/h
+- Peso: 84 toneladas
+- Sistema de tracción: Bo-Bo (4 ejes motores)
+- Fabricante: CAF
+
+La serie 7500 fue diseñada específicamente para el transporte de mercancías pesadas en las líneas electrificadas del norte de España. Su sistema de tracción Bo-Bo le proporcionaba una excelente adherencia, fundamental para arrastrar convoyes de gran tonelaje.
+
+El motor eléctrico de corriente continua de 3000 voltios utilizaba tecnología de la época, con sistema de control por resistencias. Este diseño permitía un arranque suave y un control preciso de la velocidad, esencial para el transporte de mercancías.
+
+La electrificación de las líneas del norte peninsular en los años 50 fue un proyecto estratégico que permitió modernizar el transporte ferroviario español. La 7507 operó principalmente en las líneas Bilbao-Miranda de Ebro y Santander-Palencia.
+
+Su conservación en el museo es testimonio de una época de transformación tecnológica del ferrocarril español, marcando la transición de la tracción vapor a la eléctrica en el transporte de mercancías.

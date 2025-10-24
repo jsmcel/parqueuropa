@@ -439,6 +439,64 @@ app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
   }
 });
 
+// Ruta de textos multi-tenant
+app.get('/api/text/:tenantId/:pieceId/:mode', async (req, res) => {
+  try {
+    const { tenantId, pieceId, mode } = req.params;
+    
+    // Validar que el tenant solicitado coincide con el detectado
+    if (tenantId !== req.tenant.id) {
+      return res.status(400).json({
+        error: 'Tenant ID no coincide con el detectado',
+        requested: tenantId,
+        detected: req.tenant.id
+      });
+    }
+
+    const paths = getTenantPaths(tenantId);
+    const textsDir = paths.textsDir;
+    
+    // Buscar archivo de texto
+    const textFile = path.join(textsDir, pieceId, `${mode}.txt`);
+    
+    if (!fs.existsSync(textFile)) {
+      return res.status(404).json({
+        error: 'Archivo de texto no encontrado',
+        pieceId,
+        mode,
+        tenant: tenantId
+      });
+    }
+
+    // Leer archivo de texto
+    const textContent = fs.readFileSync(textFile, 'utf8');
+
+    // Tracking de analytics
+    trackRecognition(req, {
+      pieceName: pieceId,
+      mode: mode,
+      tenant: tenantId,
+      contentType: 'text'
+    });
+
+    // Devolver contenido del texto
+    res.json({
+      pieceId,
+      mode,
+      tenant: tenantId,
+      content: textContent,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    logger.error('Error sirviendo texto:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // ========================================
 // RUTAS DE ANALYTICS
 // ========================================
@@ -454,6 +512,7 @@ app.get('*', (req, res) => {
       '/api/status',
       '/api/recognize (POST)',
       '/api/audio/:tenantId/:pieceId/:mode (GET)',
+      '/api/text/:tenantId/:pieceId/:mode (GET)',
       '/api/analytics/*'
     ]
   });

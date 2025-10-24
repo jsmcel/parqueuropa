@@ -16,6 +16,7 @@ function getTenantPaths(tenantId) {
     modelsDir: path.join(tenantDir, 'models'),
     embeddingsDir: path.join(tenantDir, 'embeddings'),
     audioDir: path.join(tenantDir, 'audio'),
+    textsDir: path.join(tenantDir, 'texts'),
 
     // Archivos específicos
     primaryModelPath: path.join(tenantDir, 'models', 'swin_t_best_model.onnx'),
@@ -40,6 +41,7 @@ function validateTenantFiles(tenantId) {
     modelsDir: fs.existsSync(paths.modelsDir),
     embeddingsDir: fs.existsSync(paths.embeddingsDir),
     audioDir: fs.existsSync(paths.audioDir),
+    textsDir: fs.existsSync(paths.textsDir),
     primaryModel: fs.existsSync(paths.primaryModelPath),
     secondaryModel: fs.existsSync(paths.secondaryModelPath),
     embeddings: fs.existsSync(paths.embeddingsPath),
