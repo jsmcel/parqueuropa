@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.2.0"
+  }
+}

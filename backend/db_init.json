@@ -1,0 +1,43 @@
+{
+  "database": "guideitor",
+  "collections": [
+    {
+      "name": "piezas",
+      "documents": [
+        {
+          "id": 1,
+          "nombre": "Locomotora de vapor Baldwin",
+          "descripcion": "Locomotora de vapor fabricada por Baldwin Locomotive Works en 1901. Utilizada en la línea Madrid-Aranjuez hasta 1970.",
+          "año": 1901,
+          "fabricante": "Baldwin Locomotive Works",
+          "ubicacion": "Sala 3, Exposición permanente"
+        },
+        {
+          "id": 2,
+          "nombre": "Señal ferroviaria de semáforo mecánico",
+          "descripcion": "Señal ferroviaria de semáforo mecánico utilizada en la red española desde 1920 hasta 1975.",
+          "año": 1920,
+          "fabricante": "Talleres Renfe",
+          "ubicacion": "Sala 2, Exposición permanente"
+        }
+      ]
+    },
+    {
+      "name": "usuarios",
+      "documents": [
+        {
+          "id": 1,
+          "nombre": "Administrador",
+          "email": "admin@guideitor.es",
+          "rol": "admin"
+        },
+        {
+          "id": 2,
+          "nombre": "Usuario Prueba",
+          "email": "usuario@guideitor.es",
+          "rol": "usuario"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""
+Script para convertir texto plano a SSML, añadiendo etiquetas <break> 
+basadas en la puntuación del texto. Procesa de forma masiva todos los 
+archivos *_CACHONDA.txt en un directorio específico.
+"""
+
+import sys
+import os
+import re
+from pathlib import Path
+
+# Rutas configurables
+INPUT_ROOT_DIR = Path(r"C:\Users\jsmce\Downloads\museo_ferrocarril_madrid_final_con_ter\museo_ferrocarril_madrid\textosmodos")
+OUTPUT_ROOT_DIR = Path(r"C:\Users\jsmce\Downloads\museo_ferrocarril_madrid_final_con_ter\museo_ferrocarril_madrid\textosparawavenet")
+FILE_PATTERN = "*_CACHONDA.txt"
+OUTPUT_SUFFIX = "_CACH_PYTH"
+
+def convert_text_to_ssml(text):
+    """
+    Convierte texto plano a SSML insertando etiquetas <break> basadas en puntuación.
+    
+    Args:
+        text: Texto plano a convertir
+        
+    Returns:
+        Texto con etiquetas SSML añadidas
+    """
+    # Definir patrones para buscar puntuación
+    patterns = [
+        (r'([.!?][\s\n])', r'\1<break time="800ms"/>'),  # Puntos, exclamaciones, interrogaciones
+        (r'([,;][\s\n])', r'\1<break time="500ms"/>'),   # Comas, punto y coma
+        (r'([:])[\s\n]', r'\1<break time="600ms"/>'),    # Dos puntos
+        (r'([—–-][\s\n])', r'\1<break time="600ms"/>'),  # Guiones, rayas
+        (r'(\.\.\.)[\s\n]', r'\1<break time="700ms"/>'), # Puntos suspensivos
+        (r'\(', r'<break time="300ms"/>('),              # Paréntesis de apertura
+        (r'\)', r')<break time="300ms"/>'),              # Paréntesis de cierre
+    ]
+    
+    # Aplicar patrones
+    modified_text = text
+    for pattern, replacement in patterns:
+        modified_text = re.sub(pattern, replacement, modified_text)
+    
+    # Corregir posibles breaks duplicados
+    modified_text = re.sub(r'<break time="\d+ms"/>\s*<break time="\d+ms"/>', 
+                           r'<break time="800ms"/>', modified_text)
+    
+    # Envolver en etiquetas <speak>
+    ssml_text = f"<speak>\n{modified_text}\n</speak>"
+    
+    return ssml_text
+
+def process_file(input_file, output_file):
+    """
+    Procesa un archivo de texto y lo convierte a SSML.
+    
+    Args:
+        input_file: Ruta al archivo de texto de entrada
+        output_file: Ruta al archivo SSML de salida
+    """
+    try:
+        # Leer archivo de entrada
+        with open(input_file, 'r', encoding='utf-8') as f:
+            text = f.read()
+        
+        # Convertir a SSML
+        ssml_text = convert_text_to_ssml(text)
+        
+        # Crear directorio de salida si no existe
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        
+        # Guardar resultado
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(ssml_text)
+        
+        print(f"Archivo SSML generado: {output_file}")
+        
+    except Exception as e:
+        print(f"Error al procesar el archivo {input_file}: {e}")
+        return False
+    
+    return True
+
+def process_all_files():
+    """
+    Procesa todos los archivos que coinciden con el patrón especificado
+    en el directorio de entrada y subdirectorios.
+    """
+    # Asegurar que los directorios existan
+    if not INPUT_ROOT_DIR.exists():
+        print(f"Error: El directorio de entrada no existe: {INPUT_ROOT_DIR}")
+        return
+    
+    OUTPUT_ROOT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Encontrar todos los archivos que coinciden con el patrón
+    input_files = list(INPUT_ROOT_DIR.glob(f"**/{FILE_PATTERN}"))
+    
+    print(f"Se encontraron {len(input_files)} archivos para procesar.")
+    
+    # Procesar cada archivo
+    for input_file in input_files:
+        # Calcular la ruta relativa para mantener la estructura de directorios
+        rel_path = input_file.relative_to(INPUT_ROOT_DIR)
+        
+        # Cambiar el sufijo _CACHONDA por _CACH_PYTH
+        base_name = input_file.stem
+        if base_name.endswith('_CACHONDA'):
+            new_name = f"{base_name[:-9]}{OUTPUT_SUFFIX}.ssml"
+        else:
+            new_name = f"{base_name}{OUTPUT_SUFFIX}.ssml"
+        
+        # Construir la ruta de salida
+        output_file = OUTPUT_ROOT_DIR / rel_path.parent / new_name
+        
+        # Procesar el archivo
+        print(f"\nProcesando: {input_file}")
+        process_file(str(input_file), str(output_file))
+
+if __name__ == "__main__":
+    print(f"Iniciando procesamiento masivo de archivos...")
+    print(f"Directorio de entrada: {INPUT_ROOT_DIR}")
+    print(f"Directorio de salida: {OUTPUT_ROOT_DIR}")
+    print(f"Patrón de archivos: {FILE_PATTERN}")
+    print(f"Sufijo de salida: {OUTPUT_SUFFIX}")
+    print("-" * 60)
+    
+    process_all_files()
+    
+    print("\n¡Procesamiento completado!")
