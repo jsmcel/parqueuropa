@@ -197,6 +197,131 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// ========================================
+// TENANT CONFIG ENDPOINT
+// ========================================
+app.get('/api/tenant-config', (req, res) => {
+  const tenantId = req.tenant.id;
+  const tenantConfig = req.tenant.config || {};
+  const mode = tenantConfig.frontendMode || 'vision';
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  res.json({
+    tenant: {
+      id: tenantId,
+      name: tenantConfig.name || tenantId,
+      description: tenantConfig.description || null,
+      frontendMode: mode,
+    },
+    gps: {
+      coordinatesAvailable: monumentsMap !== null,
+      totalMonuments: monumentsMap ? Object.keys(monumentsMap).length : 0,
+      defaultTriggerRadiusMeters: GPS_DEFAULT_RADIUS_METERS,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ========================================
+// COORDINATES ENDPOINTS (GPS MODE)
+// ========================================
+app.get('/api/coordinates/all', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const monumentsArray = monumentsMapToArray(monumentsMap);
+
+  res.json({
+    tenant: tenantId,
+    count: monumentsArray.length,
+    defaultTriggerRadiusMeters: GPS_DEFAULT_RADIUS_METERS,
+    monuments: monumentsArray,
+  });
+});
+
+app.get('/api/coordinates/nearest', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const latitude = parseFloat(req.query.lat || req.query.latitude);
+  const longitude = parseFloat(req.query.lng || req.query.lon || req.query.longitude);
+  const radius = parseFloat(req.query.radiusMeters || req.query.radius) || GPS_DEFAULT_RADIUS_METERS;
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    return res.status(400).json({
+      error: 'Parámetros lat y lng son requeridos',
+      received: req.query,
+    });
+  }
+
+  const monumentsArray = monumentsMapToArray(monumentsMap);
+  const nearest = findNearestMonument(monumentsArray, latitude, longitude);
+
+  if (!nearest) {
+    return res.status(404).json({
+      error: 'No se encontraron monumentos con coordenadas válidas',
+      tenant: tenantId,
+    });
+  }
+
+  const withinRadius = nearest.distance <= radius;
+
+  res.json({
+    tenant: tenantId,
+    query: {
+      latitude,
+      longitude,
+      radiusMeters: radius,
+    },
+    nearest: {
+      ...nearest,
+      withinRadius,
+    },
+  });
+});
+
+app.get('/api/coordinates/:monumentId', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const monument = monumentsMap[req.params.monumentId];
+
+  if (!monument) {
+    return res.status(404).json({
+      error: 'Monumento no encontrado',
+      monumentId: req.params.monumentId,
+      tenant: tenantId,
+    });
+  }
+
+  res.json({
+    tenant: tenantId,
+    monumentId: req.params.monumentId,
+    data: monument,
+  });
+});
+
 // --- Lógica de Reconocimiento ONNX Multi-Tenant ---
 let tenantSessions = {}; // Map de sesiones por tenant
 let tenantLabels = {}; // Map de labels por tenant
@@ -204,6 +329,161 @@ let tenantLabels = {}; // Map de labels por tenant
 // Agregar cache para evitar reprocesar imágenes idénticas
 const crypto = require('crypto');
 const imageCache = new Map();
+const coordinatesCache = new Map();
+const itineraryCache = new Map();
+
+const GPS_DEFAULT_RADIUS_METERS = parseFloat(process.env.GPS_TRIGGER_RADIUS_METERS) || 35;
+
+function getTenantCoordinates(tenantId) {
+  if (coordinatesCache.has(tenantId)) {
+    return coordinatesCache.get(tenantId);
+  }
+
+  try {
+    const paths = getTenantPaths(tenantId);
+    const coordinatesPath = path.join(paths.tenantDir, 'coordinates.json');
+
+    if (!fs.existsSync(coordinatesPath)) {
+      coordinatesCache.set(tenantId, null);
+      return null;
+    }
+
+    const rawData = fs.readFileSync(coordinatesPath, 'utf8');
+    const parsed = JSON.parse(rawData);
+    const monuments = parsed?.monuments || {};
+    coordinatesCache.set(tenantId, monuments);
+    itineraryCache.delete(tenantId);
+    return monuments;
+  } catch (error) {
+    logger.error({ err: error.message }, `Error cargando coordenadas para tenant ${tenantId}`);
+    coordinatesCache.set(tenantId, null);
+    itineraryCache.delete(tenantId);
+    return null;
+  }
+}
+
+function invalidateCoordinatesCache(tenantId) {
+  if (tenantId) {
+    coordinatesCache.delete(tenantId);
+    itineraryCache.delete(tenantId);
+  } else {
+    coordinatesCache.clear();
+    itineraryCache.clear();
+  }
+}
+
+function monumentsMapToArray(monumentsMap) {
+  if (!monumentsMap) return [];
+  return Object.entries(monumentsMap).map(([id, value]) => ({
+    id,
+    ...value,
+    coordinates: value.coordinates || null,
+  }));
+}
+
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371000; // metros
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function findNearestMonument(monuments, latitude, longitude) {
+  if (!Array.isArray(monuments) || monuments.length === 0) return null;
+
+  return monuments
+    .filter(m => m?.coordinates && typeof m.coordinates.latitude === 'number' && typeof m.coordinates.longitude === 'number')
+    .map(monument => {
+      const distance = calculateDistanceMeters(
+        latitude,
+        longitude,
+        monument.coordinates.latitude,
+        monument.coordinates.longitude
+      );
+      return {
+        ...monument,
+        distance,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance)[0] || null;
+}
+
+function buildItinerary(monumentsMap) {
+  if (!monumentsMap || Object.keys(monumentsMap).length === 0) {
+    return { order: [], totalDistanceMeters: 0 };
+  }
+
+  if (itineraryCache.has(monumentsMap)) {
+    return itineraryCache.get(monumentsMap);
+  }
+
+  const monumentsArray = monumentsMapToArray(monumentsMap)
+    .filter(m => m.coordinates && typeof m.coordinates.latitude === 'number' && typeof m.coordinates.longitude === 'number');
+
+  if (monumentsArray.length === 0) {
+    return { order: [], totalDistanceMeters: 0 };
+  }
+
+  // Greedy nearest-neighbour itinerary starting from the northernmost point (latitude highest)
+  const remaining = [...monumentsArray];
+  remaining.sort((a, b) => b.coordinates.latitude - a.coordinates.latitude);
+  const start = remaining.shift();
+  const itinerary = [start];
+  let lastPoint = start;
+  let totalDistance = 0;
+
+  while (remaining.length > 0) {
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (let i = 0; i < remaining.length; i += 1) {
+      const candidate = remaining[i];
+      const distance = calculateDistanceMeters(
+        lastPoint.coordinates.latitude,
+        lastPoint.coordinates.longitude,
+        candidate.coordinates.latitude,
+        candidate.coordinates.longitude,
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    const next = remaining.splice(nearestIndex, 1)[0];
+    itinerary.push({ ...next, distanceFromPrevious: nearestDistance });
+    totalDistance += nearestDistance;
+    lastPoint = next;
+  }
+
+  // Add distanceFromPrevious for first element as 0
+  itinerary[0] = { ...itinerary[0], distanceFromPrevious: 0 };
+
+  const result = {
+    order: itinerary.map((point, index) => ({
+      order: index + 1,
+      id: point.id,
+      name: point.name,
+      coordinates: point.coordinates,
+      distanceFromPrevious: point.distanceFromPrevious,
+      cumulativeDistance: itinerary
+        .slice(0, index + 1)
+        .reduce((acc, item) => acc + (item.distanceFromPrevious || 0), 0),
+      originalCountry: point.original_country || null,
+      originalCity: point.original_city || null,
+    })),
+    totalDistanceMeters: totalDistance,
+  };
+
+  itineraryCache.set(monumentsMap, result);
+  return result;
+}
 
 // Función para obtener o crear sesión ONNX para un tenant
 async function getOrCreateSession(tenantId) {
@@ -329,6 +609,14 @@ app.post('/api/recognize', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
+    }
+
+    const tenantMode = req.tenant?.config?.frontendMode || 'vision';
+    if (tenantMode === 'gps') {
+      return res.status(405).json({
+        error: 'El reconocimiento por imagen está deshabilitado para este tenant',
+        tenant: req.tenant.id,
+      });
     }
 
     const { image } = req.body;

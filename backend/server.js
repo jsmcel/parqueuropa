@@ -391,10 +391,10 @@ app.post('/api/recognize', [
   }
 });
 
-// Ruta de audio multi-tenant
-app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
+// Ruta de audio multi-tenant con soporte de idiomas
+app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
   try {
-    const { tenantId, pieceId, mode } = req.params;
+    const { tenantId, pieceId, mode, language = 'es' } = req.params;
     
     // Validar que el tenant solicitado coincide con el detectado
     if (tenantId !== req.tenant.id) {
@@ -408,14 +408,15 @@ app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
     const paths = getTenantPaths(tenantId);
     const audioDir = paths.audioDir;
     
-    // Buscar archivo de audio
-    const audioFile = path.join(audioDir, pieceId, `${mode}.mp3`);
+    // Buscar archivo de audio con idioma
+    const audioFile = path.join(audioDir, language, pieceId, `${mode}.mp3`);
     
     if (!fs.existsSync(audioFile)) {
       return res.status(404).json({
         error: 'Archivo de audio no encontrado',
         pieceId,
         mode,
+        language,
         tenant: tenantId
       });
     }
@@ -424,6 +425,7 @@ app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
     trackAudio(req, {
       pieceId,
       mode,
+      language: language,
       tenant: tenantId
     });
 
@@ -439,10 +441,10 @@ app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
   }
 });
 
-// Ruta de textos multi-tenant
-app.get('/api/text/:tenantId/:pieceId/:mode', async (req, res) => {
+// Ruta de textos multi-tenant con soporte de idiomas
+app.get('/api/text/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
   try {
-    const { tenantId, pieceId, mode } = req.params;
+    const { tenantId, pieceId, mode, language = 'es' } = req.params;
     
     // Validar que el tenant solicitado coincide con el detectado
     if (tenantId !== req.tenant.id) {
@@ -456,14 +458,15 @@ app.get('/api/text/:tenantId/:pieceId/:mode', async (req, res) => {
     const paths = getTenantPaths(tenantId);
     const textsDir = paths.textsDir;
     
-    // Buscar archivo de texto
-    const textFile = path.join(textsDir, pieceId, `${mode}.txt`);
+    // Buscar archivo de texto con idioma
+    const textFile = path.join(textsDir, language, pieceId, `${mode}.txt`);
     
     if (!fs.existsSync(textFile)) {
       return res.status(404).json({
         error: 'Archivo de texto no encontrado',
         pieceId,
         mode,
+        language,
         tenant: tenantId
       });
     }
@@ -475,6 +478,7 @@ app.get('/api/text/:tenantId/:pieceId/:mode', async (req, res) => {
     trackRecognition(req, {
       pieceName: pieceId,
       mode: mode,
+      language: language,
       tenant: tenantId,
       contentType: 'text'
     });
@@ -483,6 +487,7 @@ app.get('/api/text/:tenantId/:pieceId/:mode', async (req, res) => {
     res.json({
       pieceId,
       mode,
+      language,
       tenant: tenantId,
       content: textContent,
       timestamp: new Date().toISOString()

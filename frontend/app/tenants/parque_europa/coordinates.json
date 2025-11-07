@@ -1,0 +1,182 @@
+[
+  {
+    "id": "Atomium",
+    "name": "Atomium",
+    "original_country": "Belgica",
+    "original_city": "Bruselas",
+    "coordinates": {
+      "latitude": 40.44344132018639,
+      "longitude": -3.4573357589673672
+    }
+  },
+  {
+    "id": "Barco-Vikingo",
+    "name": "Barco Vikingo",
+    "original_country": "Escandinavia",
+    "original_city": "Oslo",
+    "coordinates": {
+      "latitude": 40.442646654417935,
+      "longitude": -3.4557433754618274
+    }
+  },
+  {
+    "id": "David-Miguel-Angel",
+    "name": "David de Miguel Angel",
+    "original_country": "Italia",
+    "original_city": "Florencia",
+    "coordinates": {
+      "latitude": 40.440253782895326,
+      "longitude": -3.458855182089978
+    }
+  },
+  {
+    "id": "Fontana-Trevi",
+    "name": "Fontana de Trevi",
+    "original_country": "Italia",
+    "original_city": "Roma",
+    "coordinates": {
+      "latitude": 40.44108462068435,
+      "longitude": -3.458144396666324
+    }
+  },
+  {
+    "id": "La-Sirenita",
+    "name": "La Sirenita",
+    "original_country": "Dinamarca",
+    "original_city": "Copenhague",
+    "coordinates": {
+      "latitude": 40.44419879516339,
+      "longitude": -3.454785135582294
+    }
+  },
+  {
+    "id": "Las-Tres-Gracias",
+    "name": "Las Tres Gracias",
+    "original_country": "Francia",
+    "original_city": "Paris",
+    "coordinates": {
+      "latitude": 40.44474977196309,
+      "longitude": -3.457440365117685
+    }
+  },
+  {
+    "id": "Manneken-Pis",
+    "name": "Manneken Pis",
+    "original_country": "Belgica",
+    "original_city": "Bruselas",
+    "coordinates": {
+      "latitude": 40.44216235532587,
+      "longitude": -3.4577574125733337
+    }
+  },
+  {
+    "id": "Molinos-Holanda",
+    "name": "Molinos Holandeses",
+    "original_country": "Paises Bajos",
+    "original_city": "Kinderdijk",
+    "coordinates": {
+      "latitude": 40.44755013663547,
+      "longitude": -3.4540462878314138
+    }
+  },
+  {
+    "id": "Muro-Berlin",
+    "name": "Muro de Berlin",
+    "original_country": "Alemania",
+    "original_city": "Berlin",
+    "coordinates": {
+      "latitude": 40.446829691657804,
+      "longitude": -3.453279062818725
+    }
+  },
+  {
+    "id": "Plaza-Europa",
+    "name": "Plaza Europa",
+    "original_country": "Espana",
+    "original_city": "Torrejon de Ardoz",
+    "coordinates": {
+      "latitude": 40.442940095702205,
+      "longitude": -3.4571914665035486
+    }
+  },
+  {
+    "id": "Plaza-Mayor",
+    "name": "Plaza Mayor",
+    "original_country": "Espana",
+    "original_city": "Madrid",
+    "coordinates": {
+      "latitude": 40.44501924041973,
+      "longitude": -3.453621475266974
+    }
+  },
+  {
+    "id": "Puente-Londres",
+    "name": "Puente de Londres",
+    "original_country": "Reino Unido",
+    "original_city": "Londres",
+    "coordinates": {
+      "latitude": 40.44528861803902,
+      "longitude": -3.455007071920604
+    }
+  },
+  {
+    "id": "Puente-Van-Gogh",
+    "name": "Puente de Van Gogh",
+    "original_country": "Francia",
+    "original_city": "Arles",
+    "coordinates": {
+      "latitude": 40.44758092130629,
+      "longitude": -3.4543290026694455
+    }
+  },
+  {
+    "id": "Puerta-Alcala",
+    "name": "Puerta de Alcala",
+    "original_country": "Espana",
+    "original_city": "Madrid",
+    "coordinates": {
+      "latitude": 40.444268036045976,
+      "longitude": -3.456539142928809
+    }
+  },
+  {
+    "id": "Puerta-Brandeburgo",
+    "name": "Puerta de Brandeburgo",
+    "original_country": "Alemania",
+    "original_city": "Berlin",
+    "coordinates": {
+      "latitude": 40.44673813454869,
+      "longitude": -3.452959946646542
+    }
+  },
+  {
+    "id": "Teatro-Griego",
+    "name": "Teatro Griego",
+    "original_country": "Grecia",
+    "original_city": "Epidauro",
+    "coordinates": {
+      "latitude": 40.44585403641605,
+      "longitude": -3.4540924386656844
+    }
+  },
+  {
+    "id": "Torre-Belem",
+    "name": "Torre de Belem",
+    "original_country": "Portugal",
+    "original_city": "Lisboa",
+    "coordinates": {
+      "latitude": 40.4456724090637,
+      "longitude": -3.4560643919499867
+    }
+  },
+  {
+    "id": "Torre-Eiffel",
+    "name": "Torre Eiffel",
+    "original_country": "Francia",
+    "original_city": "Paris",
+    "coordinates": {
+      "latitude": 40.439772014770995,
+      "longitude": -3.459810048434929
+    }
+  }
+]

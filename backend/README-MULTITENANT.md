@@ -12,19 +12,35 @@ backend/tenants/{tenant_id}/
 ├── embeddings/
 │   └── dataset_embeddings.json         # Base de datos de embeddings
 ├── audio/
-│   ├── {piece_id}/
-│   │   ├── normal.mp3                  # Audio modo normal
-│   │   ├── infantil.mp3                # Audio modo infantil
-│   │   ├── experto.mp3                 # Audio modo experto
-│   │   └── cachondo.mp3                # Audio modo cachondo
-│   └── ...
+│   ├── es/                             # Español
+│   │   ├── {piece_id}/
+│   │   │   ├── normal.mp3              # Audio modo normal
+│   │   │   ├── infantil.mp3            # Audio modo infantil
+│   │   │   ├── experto.mp3             # Audio modo experto
+│   │   │   └── cachondo.mp3            # Audio modo cachondo
+│   │   └── ...
+│   ├── en/                             # Inglés
+│   ├── fr/                             # Francés
+│   ├── it/                             # Italiano
+│   ├── de/                             # Alemán
+│   ├── pt/                             # Portugués
+│   ├── zh/                             # Chino
+│   └── ja/                             # Japonés
 └── texts/
-    ├── {piece_id}/
-    │   ├── normal.txt                  # Texto modo normal
-    │   ├── infantil.txt                # Texto modo infantil
-    │   ├── experto.txt                 # Texto modo experto
-    │   └── cachondo.txt                # Texto modo cachondo
-    └── ...
+    ├── es/                             # Español
+    │   ├── {piece_id}/
+    │   │   ├── normal.txt              # Texto modo normal
+    │   │   ├── infantil.txt            # Texto modo infantil
+    │   │   ├── experto.txt             # Texto modo experto
+    │   │   └── cachondo.txt            # Texto modo cachondo
+    │   └── ...
+    ├── en/                             # Inglés
+    ├── fr/                             # Francés
+    ├── it/                             # Italiano
+    ├── de/                             # Alemán
+    ├── pt/                             # Portugués
+    ├── zh/                             # Chino
+    └── ja/                             # Japonés
 ```
 
 ## Configuración de Tenants

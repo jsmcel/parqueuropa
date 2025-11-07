@@ -3,13 +3,15 @@
     "name": "Museo del Ferrocarril de Madrid",
     "subdomains": ["museoferrocarril", "ferrocarril"],
     "enabled": true,
-    "description": "Museo del Ferrocarril de Madrid - Colección histórica ferroviaria"
+    "description": "Museo del Ferrocarril de Madrid - Colección histórica ferroviaria",
+    "frontendMode": "vision"
   },
   "parque_europa": {
     "name": "Parque Europa",
     "subdomains": ["parqueuropa", "europa"],
     "enabled": true,
-    "description": "Parque Europa - Torrejón de Ardoz, Madrid"
+    "description": "Parque Europa - Torrejón de Ardoz, Madrid",
+    "frontendMode": "gps"
   }
 }
 
