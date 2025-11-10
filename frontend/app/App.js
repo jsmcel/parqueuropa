@@ -46,8 +46,13 @@ const getInitialTenant = () => {
     process.env.EXPO_PUBLIC_TENANT ||
     undefined;
 
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : undefined;
-  const searchString = typeof window !== 'undefined' ? window.location.search : undefined;
+  const hasBrowserLocation =
+    typeof window !== 'undefined' &&
+    typeof window.location === 'object' &&
+    window.location !== null;
+
+  const hostname = hasBrowserLocation ? window.location.hostname : undefined;
+  const searchString = hasBrowserLocation ? window.location.search : undefined;
 
   const tenantId = detectTenantId({
     explicitTenantId: explicitTenant,
@@ -148,15 +153,30 @@ export default function App() {
     setApiConfig({
       config: tenantDescriptor.config,
       tenantId: tenantDescriptor.id,
+      // Use APP_API_URL when running native shells (hostname unavailable)
+      explicitApiUrl: tenantDescriptor.config.APP_API_URL,
     });
   }, [tenantDescriptor]);
 
   useEffect(() => {
     const prepare = async () => {
       try {
+        const defaultFonts = {
+          railway: require('./core/shared/assets/fonts/Railway.ttf'),
+          industrial: require('./core/shared/assets/fonts/Industrial.ttf'),
+        };
+
+        const tenantFonts =
+          tenantDescriptor?.config?.FONT_FILES ||
+          Object.fromEntries(
+            Object.entries(tenantDescriptor?.config?.FONTS || {}).filter(
+              ([, value]) => typeof value !== 'string'
+            )
+          );
+
         await Font.loadAsync({
-          railway: require('./assets/fonts/Railway.ttf'),
-          industrial: require('./assets/fonts/Industrial.ttf'),
+          ...defaultFonts,
+          ...tenantFonts,
         });
         setFontsLoaded(true);
       } catch (error) {
@@ -165,7 +185,7 @@ export default function App() {
       }
     };
     prepare();
-  }, []);
+  }, [tenantDescriptor]);
 
   useEffect(() => {
     if (!fontsLoaded) return;

@@ -1,10 +1,10 @@
 let activeContext = null;
 
-export function setApiConfig({ config, tenantId }) {
+export function setApiConfig({ config, tenantId, explicitApiUrl }) {
   if (!config) {
     throw new Error('setApiConfig requires a tenant config object');
   }
-  activeContext = { config, tenantId };
+  activeContext = { config, tenantId, explicitApiUrl };
 }
 
 function requireContext() {
@@ -51,10 +51,16 @@ const handleResponse = async (response) => {
   return data;
 };
 
+function resolveApiUrl(baseUrl, fallback) {
+  if (baseUrl && typeof baseUrl === 'string') return baseUrl;
+  return fallback;
+}
+
 export const post = async (path, body, additionalHeaders = {}) => {
-  const { config } = requireContext();
+  const { config, explicitApiUrl } = requireContext();
+  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
   try {
-    const response = await fetch(`${config.API_URL}${path}`, {
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'POST',
       headers: buildHeaders({
         'Content-Type': 'application/json',
@@ -70,8 +76,9 @@ export const post = async (path, body, additionalHeaders = {}) => {
 };
 
 export const get = async (path, params, additionalHeaders = {}) => {
-  const { config } = requireContext();
-  let url = `${config.API_URL}${path}`;
+  const { config, explicitApiUrl } = requireContext();
+  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
+  let url = `${baseUrl}${path}`;
   if (params) {
     const queryParams = new URLSearchParams(params);
     url += `?${queryParams.toString()}`;
@@ -95,10 +102,11 @@ export const recognizeImage = async (base64Image) => {
     throw new Error('No se proporciono imagen en base64');
   }
 
-  const { config } = requireContext();
+  const { config, explicitApiUrl } = requireContext();
+  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
 
   try {
-    const response = await fetch(`${config.API_URL}/api/recognize`, {
+    const response = await fetch(`${baseUrl}/api/recognize`, {
       method: 'POST',
       headers: buildHeaders({
         'Content-Type': 'application/json',
@@ -126,18 +134,24 @@ export const recognizeImage = async (base64Image) => {
   }
 };
 
-export const getAudioInfo = async (tenantId, pieceId, mode) =>
-  get(`/api/audio/${tenantId}/${pieceId}/${mode}`);
+export const getAudioInfo = async (tenantId, pieceId, mode, language = 'es') =>
+  get(`/api/audio/${tenantId}/${pieceId}/${mode}/${language}`);
 
-export function getAudioFileUrl(tenantId, pieceId, mode) {
-  const { config } = requireContext();
-  return `${config.API_URL}/api/audio/${tenantId}/${pieceId}/${mode}`;
+export function getAudioFileUrl(tenantId, pieceId, mode, language = 'es') {
+  const { config, explicitApiUrl } = requireContext();
+  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
+  const safePieceId = encodeURIComponent(pieceId);
+  const safeMode = encodeURIComponent(mode);
+  const safeLanguage = encodeURIComponent(language);
+  const safeTenant = encodeURIComponent(tenantId);
+  return `${baseUrl}/api/audio/${safeTenant}/${safePieceId}/${safeMode}/${safeLanguage}?tenant_id=${safeTenant}`;
 }
 
 export const sendFeedback = async (rating, comment, deviceInfo) => {
-  const { config } = requireContext();
+  const { config, explicitApiUrl } = requireContext();
+  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
   try {
-    const response = await fetch(`${config.API_URL}/api/feedback`, {
+    const response = await fetch(`${baseUrl}/api/feedback`, {
       method: 'POST',
       headers: buildHeaders({
         'Content-Type': 'application/json',

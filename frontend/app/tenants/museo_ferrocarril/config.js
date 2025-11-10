@@ -1,6 +1,7 @@
 export default {
   // Configuración de la API
-  API_URL: 'https://guideitor.ethcuela.es',
+  API_URL: 'https://museoferrocarril.guidaitor.es',
+  LEGACY_API_URL: 'https://guideitor.ethcuela.es',
   FRONTEND_MODE: 'vision',
 
   // Configuración de colores para el Museo del Ferrocarril
@@ -16,13 +17,22 @@ export default {
 
   ASSETS: {
     heroBanner: require('./assets/banner_ferroviario.jpg'),
-    placeholderSmall: require('../../core/shared/assets/images/placeholder_small.png'),
-    placeholderLarge: require('../../core/shared/assets/images/placeholder_large.png'),
+    placeholderSmall: require('./assets/placeholder_small.png'),
+    placeholderLarge: require('./assets/placeholder_large.png'),
     splashImage: require('./assets/splash_ferroviaria.png'),
     splashLogo: require('./assets/splash.png'),
     appIcon: require('./assets/icon.png'),
     adaptiveIcon: require('./assets/adaptive-icon.png'),
     museumLogo: require('./assets/logo_ferroviario.png'),
+  },
+
+  FONT_FILES: {
+    railway: require('./assets/fonts/Railway.ttf'),
+    industrial: require('./assets/fonts/Industrial.ttf'),
+  },
+  FONTS: {
+    railway: 'railway',
+    industrial: 'industrial',
   },
 
   // Configuración de la aplicación

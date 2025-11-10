@@ -90,8 +90,22 @@ const ResultScreen = ({ route, navigation }) => {
 
   const { config } = useTenant();
   const colors = config?.COLORS || {};
-  const fonts = config?.FONTS || {};
+  const rawFonts = config?.FONTS || {};
+  const fonts = useMemo(() => {
+    const normalized = Object.entries(rawFonts).reduce((acc, [key, value]) => {
+      if (typeof value === 'string') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+    return {
+      railway: normalized.railway || 'railway',
+      industrial: normalized.industrial || 'industrial',
+      ...normalized,
+    };
+  }, [rawFonts]);
   const audioModes = config?.AUDIO_MODES || [];
+  const audioLanguage = config?.AUDIO_LANGUAGE || 'es';
   const styles = useMemo(() => createStyles(colors, fonts), [colors, fonts]);
   const tenantId = config?.TENANT_ID || 'default';
   const placeholderLarge = config?.ASSETS?.placeholderLarge || require('../assets/images/placeholder_large.png');
@@ -231,6 +245,67 @@ const ResultScreen = ({ route, navigation }) => {
       // Navega a la pantalla 'Inicio' dentro del contenedor de Tabs 'MainTabs'
       navigation.navigate('MainTabs', { screen: 'Inicio' });
   };
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadPreferences = async () => {
+      try {
+        if (Platform.OS !== 'web') {
+          const savedAutoPlay = await AsyncStorage.getItem('autoPlayAudio');
+          if (isMounted && savedAutoPlay !== null) {
+            setAutoPlayPref(savedAutoPlay === 'true');
+          }
+          if (!initialAudioMode) {
+            const savedMode = await AsyncStorage.getItem('selectedAudioMode');
+            if (isMounted && savedMode) {
+              setSelectedMode(savedMode);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('ResultScreen: Failed to load audio preferences', error);
+      }
+    };
+    loadPreferences();
+    return () => {
+      isMounted = false;
+    };
+  }, [initialAudioMode]);
+
+  useEffect(() => {
+    if (!pieceName || !tenantId) {
+      setAudioUrl('');
+      return;
+    }
+    const modeToUse = selectedMode || 'normal';
+    const url = getAudioFileUrl(tenantId, pieceName, modeToUse, audioLanguage);
+    setAudioUrl(url);
+    setAudioError(null);
+  }, [tenantId, pieceName, selectedMode, audioLanguage]);
+
+  const handleModeChange = useCallback(
+    (modeId) => {
+      if (!modeId || modeId === selectedMode) return;
+      setSelectedMode(modeId);
+      AsyncStorage.setItem('selectedAudioMode', modeId).catch((error) =>
+        console.warn('ResultScreen: Failed to persist selected audio mode', error)
+      );
+    },
+    [selectedMode]
+  );
+
+  const handleAudioError = useCallback((error) => {
+    if (!error) {
+      setAudioError('No se pudo reproducir el audio.');
+      return;
+    }
+    console.error('ResultScreen: Audio playback error', error);
+    const message =
+      typeof error?.message === 'string' && error.message.length > 0
+        ? error.message
+        : 'No se pudo reproducir el audio.';
+    setAudioError(message);
+  }, []);
 
   // --- Render ---
   if (!pieceName) {
@@ -709,5 +784,3 @@ const createStyles = (colors, fonts) => StyleSheet.create({
 });
 
 export default ResultScreen;
-
-

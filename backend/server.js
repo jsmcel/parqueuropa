@@ -51,6 +51,7 @@ const CONFIG = {
 
 // Crear aplicación Express
 const app = express();
+app.set('trust proxy', process.env.TRUST_PROXY ? parseInt(process.env.TRUST_PROXY, 10) : 1);
 
 // ========================================
 // MIDDLEWARE DE SEGURIDAD PARA PRODUCCIÓN
@@ -197,6 +198,128 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// ========================================
+// TENANT CONFIG & GPS ENDPOINTS
+// ========================================
+app.get('/api/tenant-config', (req, res) => {
+  const tenantId = req.tenant.id;
+  const tenantConfig = req.tenant.config || {};
+  const mode = tenantConfig.frontendMode || 'vision';
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  res.json({
+    tenant: {
+      id: tenantId,
+      name: tenantConfig.name || tenantId,
+      description: tenantConfig.description || null,
+      frontendMode: mode,
+    },
+    gps: {
+      coordinatesAvailable: monumentsMap !== null,
+      totalMonuments: monumentsMap ? Object.keys(monumentsMap).length : 0,
+      defaultTriggerRadiusMeters: GPS_DEFAULT_RADIUS_METERS,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/coordinates/all', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const monumentsArray = monumentsMapToArray(monumentsMap);
+
+  res.json({
+    tenant: tenantId,
+    count: monumentsArray.length,
+    defaultTriggerRadiusMeters: GPS_DEFAULT_RADIUS_METERS,
+    monuments: monumentsArray,
+  });
+});
+
+app.get('/api/coordinates/nearest', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const latitude = parseFloat(req.query.lat || req.query.latitude);
+  const longitude = parseFloat(req.query.lng || req.query.lon || req.query.longitude);
+  const radius = parseFloat(req.query.radiusMeters || req.query.radius) || GPS_DEFAULT_RADIUS_METERS;
+
+  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    return res.status(400).json({
+      error: 'Parámetros lat y lng son requeridos',
+      received: req.query,
+    });
+  }
+
+  const monumentsArray = monumentsMapToArray(monumentsMap);
+  const nearest = findNearestMonument(monumentsArray, latitude, longitude);
+
+  if (!nearest) {
+    return res.status(404).json({
+      error: 'No se encontraron monumentos con coordenadas válidas',
+      tenant: tenantId,
+    });
+  }
+
+  const withinRadius = nearest.distance <= radius;
+
+  res.json({
+    tenant: tenantId,
+    query: {
+      latitude,
+      longitude,
+      radiusMeters: radius,
+    },
+    nearest: {
+      ...nearest,
+      withinRadius,
+    },
+  });
+});
+
+app.get('/api/coordinates/:monumentId', (req, res) => {
+  const tenantId = req.tenant.id;
+  const monumentsMap = getTenantCoordinates(tenantId);
+
+  if (!monumentsMap) {
+    return res.status(404).json({
+      error: 'No hay coordenadas configuradas para este tenant',
+      tenant: tenantId,
+    });
+  }
+
+  const monument = monumentsMap[req.params.monumentId];
+
+  if (!monument) {
+    return res.status(404).json({
+      error: 'Monumento no encontrado',
+      monumentId: req.params.monumentId,
+      tenant: tenantId,
+    });
+  }
+
+  res.json({
+    tenant: tenantId,
+    monumentId: req.params.monumentId,
+    data: monument,
+  });
+});
+
 // --- Lógica de Reconocimiento ONNX Multi-Tenant ---
 let tenantSessions = {}; // Map de sesiones por tenant
 let tenantLabels = {}; // Map de labels por tenant
@@ -204,6 +327,78 @@ let tenantLabels = {}; // Map de labels por tenant
 // Agregar cache para evitar reprocesar imágenes idénticas
 const crypto = require('crypto');
 const imageCache = new Map();
+const coordinatesCache = new Map();
+const itineraryCache = new Map();
+const GPS_DEFAULT_RADIUS_METERS = parseFloat(process.env.GPS_TRIGGER_RADIUS_METERS) || 35;
+
+function getTenantCoordinates(tenantId) {
+  if (coordinatesCache.has(tenantId)) {
+    return coordinatesCache.get(tenantId);
+  }
+
+  try {
+    const paths = getTenantPaths(tenantId);
+    const coordinatesPath = path.join(paths.tenantDir, 'coordinates.json');
+
+    if (!fs.existsSync(coordinatesPath)) {
+      coordinatesCache.set(tenantId, null);
+      return null;
+    }
+
+    const rawData = fs.readFileSync(coordinatesPath, 'utf8');
+    const parsed = JSON.parse(rawData);
+    const monuments = parsed?.monuments || {};
+    coordinatesCache.set(tenantId, monuments);
+    itineraryCache.delete(tenantId);
+    return monuments;
+  } catch (error) {
+    logger.error({ err: error.message }, `Error cargando coordenadas para tenant ${tenantId}`);
+    coordinatesCache.set(tenantId, null);
+    itineraryCache.delete(tenantId);
+    return null;
+  }
+}
+
+function monumentsMapToArray(monumentsMap) {
+  if (!monumentsMap) return [];
+  return Object.entries(monumentsMap).map(([id, value]) => ({
+    id,
+    ...value,
+    coordinates: value.coordinates || null,
+  }));
+}
+
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371000; // metros
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function findNearestMonument(monuments, latitude, longitude) {
+  if (!Array.isArray(monuments) || monuments.length === 0) return null;
+
+  return monuments
+    .filter(m => m?.coordinates && typeof m.coordinates.latitude === 'number' && typeof m.coordinates.longitude === 'number')
+    .map(monument => {
+      const distance = calculateDistanceMeters(
+        latitude,
+        longitude,
+        monument.coordinates.latitude,
+        monument.coordinates.longitude
+      );
+      return {
+        ...monument,
+        distance,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance)[0] || null;
+}
 
 // Función para obtener o crear sesión ONNX para un tenant
 async function getOrCreateSession(tenantId) {
@@ -333,6 +528,15 @@ app.post('/api/recognize', [
 
     const { image } = req.body;
     const tenantId = req.tenant.id;
+    const tenantMode = req.tenant.config?.frontendMode || 'vision';
+
+    if (tenantMode === 'gps') {
+      return res.status(405).json({
+        error: 'El reconocimiento por imagen no está habilitado para este tenant',
+        tenant: tenantId,
+        mode: tenantMode,
+      });
+    }
     
     logger.info(`Procesando reconocimiento para tenant: ${tenantId}`);
 
@@ -411,22 +615,40 @@ app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
     // Buscar archivo de audio con idioma
     const audioFile = path.join(audioDir, language, pieceId, `${mode}.mp3`);
     
-    if (!fs.existsSync(audioFile)) {
+    const audioExists = fs.existsSync(audioFile);
+
+    if (!audioExists) {
+      setImmediate(() => {
+        trackAudio({
+          pieceId,
+          audioMode: mode,
+          success: false,
+          sessionId: req.analyticsSessionId,
+          ip: req.ip,
+          tenant: tenantId,
+          language,
+        }).catch((err) => logger.warn('Error tracking failed audio event:', err));
+      });
+
       return res.status(404).json({
         error: 'Archivo de audio no encontrado',
         pieceId,
         mode,
         language,
-        tenant: tenantId
+        tenant: tenantId,
       });
     }
 
-    // Tracking de analytics
-    trackAudio(req, {
-      pieceId,
-      mode,
-      language: language,
-      tenant: tenantId
+    setImmediate(() => {
+      trackAudio({
+        pieceId,
+        audioMode: mode,
+        success: true,
+        sessionId: req.analyticsSessionId,
+        ip: req.ip,
+        tenant: tenantId,
+        language,
+      }).catch((err) => logger.warn('Error tracking audio event:', err));
     });
 
     // Servir archivo de audio

@@ -29,27 +29,37 @@ function tenantMiddleware(req, res, next) {
     tenantId = req.headers['x-tenant-id'];
     detectionMethod = 'header';
   }
+  
   // 2. Detectar por subdomain
-  else if (req.headers.host) {
+  if (!tenantId && req.headers.host) {
     const host = req.headers.host.toLowerCase();
-    const subdomain = host.split('.')[0];
-    
-    // Buscar tenant por subdomain
+    const hostParts = host.split('.');
+    const possibleSubdomains = [];
+
+    // Generar posibles subdominios concatenando segmentos antes del dominio principal
+    for (let i = 1; i <= hostParts.length - 2; i += 1) {
+      possibleSubdomains.push(hostParts.slice(0, i).join('.'));
+    }
+
+    // Buscar tenant por cualquier coincidencia de subdominio
     for (const [id, config] of Object.entries(tenantsConfig)) {
-      if (config.subdomains && config.subdomains.includes(subdomain)) {
+      const aliases = config.subdomains || [];
+      if (aliases.some(alias => possibleSubdomains.includes(alias))) {
         tenantId = id;
         detectionMethod = 'subdomain';
         break;
       }
     }
   }
-  // 3. Detectar por query param
-  else if (req.query.tenant_id) {
+
+  // 3. Detectar por query param (fallback, aunque haya host sin coincidencia)
+  if (!tenantId && req.query.tenant_id) {
     tenantId = req.query.tenant_id;
     detectionMethod = 'query';
   }
+
   // 4. Default: primer tenant habilitado
-  else {
+  if (!tenantId) {
     const enabledTenants = Object.entries(tenantsConfig)
       .filter(([id, config]) => config.enabled)
       .map(([id]) => id);

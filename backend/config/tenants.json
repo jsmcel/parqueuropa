@@ -8,7 +8,7 @@
   },
   "parque_europa": {
     "name": "Parque Europa",
-    "subdomains": ["parqueuropa", "europa"],
+    "subdomains": ["parqueuropa", "europa", "api.parqueuropa"],
     "enabled": true,
     "description": "Parque Europa - Torrejón de Ardoz, Madrid",
     "frontendMode": "gps"

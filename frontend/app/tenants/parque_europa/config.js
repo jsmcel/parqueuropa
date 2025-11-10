@@ -9,7 +9,10 @@ const FALLBACK_MONUMENTS = Array.isArray(fallbackCoordinateData)
 
 export default {
   // Configuración de la API
-  API_URL: 'https://parqueuropa.ethcuela.es',
+  API_URL: 'https://guideitor.ethcuela.es',
+  APP_API_URL: 'https://guideitor.ethcuela.es',
+  LEGACY_API_URL: 'https://guideitor.ethcuela.es',
+  ALT_API_URLS: ['https://parqueuropa.guidaitor.es', 'https://guideitor.ethcuela.es'],
   FRONTEND_MODE: 'gps',
   
 
@@ -33,6 +36,15 @@ export default {
     splashImage: require('./assets/splash.png'),
     appIcon: require('./assets/icon.png'),
     adaptiveIcon: require('./assets/adaptive-icon.png'),
+  },
+
+  FONT_FILES: {
+    railway: require('./assets/fonts/Railway.ttf'),
+    industrial: require('./assets/fonts/Industrial.ttf'),
+  },
+  FONTS: {
+    railway: 'railway',
+    industrial: 'industrial',
   },
 
   // Configuración de la aplicación
@@ -124,22 +136,22 @@ export default {
   ITINERARY_TOTAL_STOPS: 18,
   ITINERARY_STOPS: [
     { order: 1, id: 'Puerta-Brandeburgo', name: 'Puerta de Brandeburgo', description: 'Inicio ceremonial del recorrido' },
-    { order: 2, id: 'Plaza-Mayor', name: 'Plaza Mayor', description: 'Escena urbana para fotos panorámicas' },
-    { order: 3, id: 'La-Sirenita', name: 'La Sirenita', description: 'La esquina nórdica junto al lago' },
-    { order: 4, id: 'Barco-Vikingo', name: 'Barco Vikingo', description: 'Leyendas del norte en plena laguna' },
-    { order: 5, id: 'Fontana-Trevi', name: 'Fontana de Trevi', description: 'Rinconcito italiano para pedir deseos' },
-    { order: 6, id: 'David-Miguel-Angel', name: 'David de Miguel Ángel', description: 'Maestría renacentista en pleno parque' },
-    { order: 7, id: 'Torre-Eiffel', name: 'Torre Eiffel', description: 'Punto selfie obligado' },
-    { order: 8, id: 'Manneken-Pis', name: 'Manneken Pis', description: 'El guiño más divertido de Bruselas' },
-    { order: 9, id: 'Plaza-Europa', name: 'Plaza Europa', description: 'Centro neurálgico del parque' },
-    { order: 10, id: 'Atomium', name: 'Atomium', description: 'Ciencia y futurismo belga' },
-    { order: 11, id: 'Puerta-Alcala', name: 'Puerta de Alcalá', description: 'Orgullo madrileño al aire libre' },
-    { order: 12, id: 'Las-Tres-Gracias', name: 'Las Tres Gracias', description: 'Arte clásico que da la bienvenida' },
-    { order: 13, id: 'Torre-Belem', name: 'Torre de Belém', description: 'Defensa histórica junto al agua' },
-    { order: 14, id: 'Puente-Van-Gogh', name: 'Puente de Van Gogh', description: 'Postales de la campiña francesa' },
-    { order: 15, id: 'Molinos-Holanda', name: 'Molinos Holandeses', description: 'El rincón más fotogénico' },
-    { order: 16, id: 'Puente-Londres', name: 'Puente de Londres', description: 'Ingeniería victoriana' },
-    { order: 17, id: 'Muro-Berlin', name: 'Muro de Berlín', description: 'Recuerdo histórico imprescindible' },
+    { order: 2, id: 'Muro-Berlin', name: 'Muro de Berlín', description: 'Recuerdo histórico imprescindible' },
+    { order: 3, id: 'Plaza-Mayor', name: 'Plaza Mayor', description: 'Escena urbana para fotos panorámicas' },
+    { order: 4, id: 'La-Sirenita', name: 'La Sirenita', description: 'La esquina nórdica junto al lago' },
+    { order: 5, id: 'Barco-Vikingo', name: 'Barco Vikingo', description: 'Leyendas del norte en plena laguna' },
+    { order: 6, id: 'Fontana-Trevi', name: 'Fontana de Trevi', description: 'Rinconcito italiano para pedir deseos' },
+    { order: 7, id: 'David-Miguel-Angel', name: 'David de Miguel Ángel', description: 'Maestría renacentista en pleno parque' },
+    { order: 8, id: 'Torre-Eiffel', name: 'Torre Eiffel', description: 'Punto selfie obligado' },
+    { order: 9, id: 'Manneken-Pis', name: 'Manneken Pis', description: 'El guiño más divertido de Bruselas' },
+    { order: 10, id: 'Plaza-Europa', name: 'Plaza Europa', description: 'Centro neurálgico del parque' },
+    { order: 11, id: 'Atomium', name: 'Atomium', description: 'Ciencia y futurismo belga' },
+    { order: 12, id: 'Puerta-Alcala', name: 'Puerta de Alcalá', description: 'Orgullo madrileño al aire libre' },
+    { order: 13, id: 'Las-Tres-Gracias', name: 'Las Tres Gracias', description: 'Arte clásico que da la bienvenida' },
+    { order: 14, id: 'Torre-Belem', name: 'Torre de Belém', description: 'Defensa histórica junto al agua' },
+    { order: 15, id: 'Puente-Van-Gogh', name: 'Puente de Van Gogh', description: 'Postales de la campiña francesa' },
+    { order: 16, id: 'Molinos-Holanda', name: 'Molinos Holandeses', description: 'El rincón más fotogénico' },
+    { order: 17, id: 'Puente-Londres', name: 'Puente de Londres', description: 'Ingeniería victoriana' },
     { order: 18, id: 'Teatro-Griego', name: 'Teatro Griego', description: 'Cierre cultural del itinerario' },
   ],
 

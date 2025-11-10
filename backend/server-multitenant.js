@@ -51,6 +51,7 @@ const CONFIG = {
 
 // Crear aplicación Express
 const app = express();
+app.set('trust proxy', process.env.TRUST_PROXY ? parseInt(process.env.TRUST_PROXY, 10) : 1);
 
 // ========================================
 // MIDDLEWARE DE SEGURIDAD PARA PRODUCCIÓN
@@ -680,9 +681,9 @@ app.post('/api/recognize', [
 });
 
 // Ruta de audio multi-tenant
-app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
+app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
   try {
-    const { tenantId, pieceId, mode } = req.params;
+    const { tenantId, pieceId, mode, language = 'es' } = req.params;
     
     // Validar que el tenant solicitado coincide con el detectado
     if (tenantId !== req.tenant.id) {
@@ -694,25 +695,43 @@ app.get('/api/audio/:tenantId/:pieceId/:mode', async (req, res) => {
     }
 
     const paths = getTenantPaths(tenantId);
-    const audioDir = paths.audioDir;
+    const audioDir = path.join(paths.audioDir, language);
     
     // Buscar archivo de audio
     const audioFile = path.join(audioDir, pieceId, `${mode}.mp3`);
     
-    if (!fs.existsSync(audioFile)) {
+    const audioExists = fs.existsSync(audioFile);
+
+    if (!audioExists) {
+      setImmediate(() => {
+        trackAudio({
+          pieceId,
+          audioMode: mode,
+          success: false,
+          sessionId: req.analyticsSessionId,
+          ip: req.ip,
+          tenant: tenantId,
+        }).catch((err) => logger.warn({ err }, 'Error tracking failed audio event'));
+      });
+
       return res.status(404).json({
         error: 'Archivo de audio no encontrado',
         pieceId,
         mode,
-        tenant: tenantId
+        tenant: tenantId,
+        language,
       });
     }
 
-    // Tracking de analytics
-    trackAudio(req, {
-      pieceId,
-      mode,
-      tenant: tenantId
+    setImmediate(() => {
+      trackAudio({
+        pieceId,
+        audioMode: mode,
+        success: true,
+        sessionId: req.analyticsSessionId,
+        ip: req.ip,
+        tenant: tenantId,
+      }).catch((err) => logger.warn({ err }, 'Error tracking audio event'));
     });
 
     // Servir archivo de audio
