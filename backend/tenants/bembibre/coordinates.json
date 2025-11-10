@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "defaultTriggerRadiusMeters": 35,
+    "itineraryLengthKm": 1.0,
+    "itineraryDurationMinutes": 60,
+    "totalStops": 6
+  },
+  "monuments": {
+    "Plaza-Mayor": {
+      "id": "Plaza-Mayor",
+      "name": "Plaza Mayor e Iglesia de San Pedro",
+      "category": "casco_historico",
+      "summary": "Inicio del recorrido en la plaza mayor y la iglesia de San Pedro, antigua sinagoga del siglo XII convertida en templo cristiano.",
+      "story": "La Plaza Mayor concentra el ayuntamiento y la iglesia parroquial de San Pedro, un templo de origen romanico que fue sinagoga medieval antes de consagrarse en 1490. El campanario barroco coronado por el Sagrado Corazon se alza como simbolo de Bembibre y recuerda la prosperidad minera y comercial de la villa.",
+      "itineraryOrder": 1,
+      "coordinates": {
+        "latitude": 42.6148,
+        "longitude": -6.4163
+      }
+    },
+    "Museo-Alto-Bierzo": {
+      "id": "Museo-Alto-Bierzo",
+      "name": "Museo Alto Bierzo (Casa de las Culturas)",
+      "category": "museos",
+      "summary": "Museo municipal que reune arqueologia, etnografia y donaciones vecinales en la antigua Casa de las Culturas.",
+      "story": "En la Casa de las Culturas, antiguo hospital de peregrinos, se expone una coleccion que repasa la historia del Bierzo Alto: utiles paleoliticos, aras romanas, el Bronce de Bembibre y recreaciones de cocinas, aulas y oficios tradicionales.",
+      "itineraryOrder": 2,
+      "coordinates": {
+        "latitude": 42.6178,
+        "longitude": -6.416
+      }
+    },
+    "Museo-Arte-Sacro": {
+      "id": "Museo-Arte-Sacro",
+      "name": "Museo de Arte Sacro 'El Santo'",
+      "category": "museos",
+      "summary": "Museo cofrade dedicado al Ecce Homo con pasos procesionales, orfebreria y exvotos del siglo XVII al XX.",
+      "story": "Gestionado por la Cofradia del Santo Ecce-Homo, el museo conserva esculturas de Semana Santa, catafalcos, tunicas bordadas y piezas de plateria que documentan siglos de devocion popular.",
+      "itineraryOrder": 3,
+      "coordinates": {
+        "latitude": 42.6146,
+        "longitude": -6.412
+      }
+    },
+    "Santuario-Ecce-Homo": {
+      "id": "Santuario-Ecce-Homo",
+      "name": "Santuario del Ecce Homo y Garita del Santo",
+      "category": "miradores",
+      "summary": "Ermita barroca situada en lo alto de Bembibre con mirador hacia el valle del Boeza y la garita votiva.",
+      "story": "La subida final conduce al santuario del patron de Bembibre, rodeado de castanos y con una garita que custodia la imagen durante las romerias. Desde aqui se domina el casco historico y se cierran las procesiones del Santo.",
+      "itineraryOrder": 4,
+      "coordinates": {
+        "latitude": 42.614,
+        "longitude": -6.41
+      }
+    },
+    "Gastronomia-Bembibre": {
+      "id": "Gastronomia-Bembibre",
+      "name": "Sabores del Bierzo en Bembibre",
+      "category": "gastronomia",
+      "summary": "Ruta culinaria con botillo, empanadas, pimientos asados y tapeo en torno a la avenida Villafranca.",
+      "story": "Bembibre presume de una cocina basada en carnes de pastos bercianos, huertas del Boeza y vinos D.O. Bierzo. El botillo, protagonista del festival nacional de febrero, convive con empanadas, pimientos asados con sello IGP y una escena de bares donde se sirven tapas, dulces de temporada y copas de mencía o godello. Restaurantes como Meson El Labrador, La Piedra, Molino del Real o el gallego O Pulpeiro mantienen viva la tradición y permiten saborear la identidad local.",
+      "itineraryOrder": 5,
+      "coordinates": {
+        "latitude": 42.6155,
+        "longitude": -6.4145
+      }
+    },
+    "Compras-Artesania": {
+      "id": "Compras-Artesania",
+      "name": "Compras y artesania local",
+      "category": "compras",
+      "summary": "Tiendas y mercados con embutidos, conservas, artesania y ferias en torno al mercado de abastos.",
+      "story": "La avenida Villafranca y el mercado concentran comercios como la centenaria Carniceria-Charcuteria Carlos, famosa por sus botillos, cecinas y un dispensador 24h de productos bercianos. En los alrededores se venden quesos, miel de brezo, pimientos asados en conserva y vinos, ademas de artesania en talleres de ceramica, floristas creativos como Arte Vegetal o librerias como Cobos. Los domingos, el mercado ambulante y las ferias del Teatro Benevivere reunen a productores y artistas locales.",
+      "itineraryOrder": 6,
+      "coordinates": {
+        "latitude": 42.6165,
+        "longitude": -6.4178
+      }
+    }
+  }
+}

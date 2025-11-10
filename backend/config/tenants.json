@@ -1,17 +1,34 @@
 {
   "museo_ferrocarril": {
     "name": "Museo del Ferrocarril de Madrid",
-    "subdomains": ["museoferrocarril", "ferrocarril"],
+    "subdomains": [
+      "museoferrocarril",
+      "ferrocarril"
+    ],
     "enabled": true,
     "description": "Museo del Ferrocarril de Madrid - Colección histórica ferroviaria",
     "frontendMode": "vision"
   },
   "parque_europa": {
     "name": "Parque Europa",
-    "subdomains": ["parqueuropa", "europa", "api.parqueuropa"],
+    "subdomains": [
+      "parqueuropa",
+      "europa",
+      "api.parqueuropa"
+    ],
     "enabled": true,
     "description": "Parque Europa - Torrejón de Ardoz, Madrid",
     "frontendMode": "gps"
+  },
+  "bembibre": {
+    "name": "Bembibre Historico",
+    "subdomains": [
+      "bembibre",
+      "bembibre-gps",
+      "bierzoalto"
+    ],
+    "enabled": true,
+    "description": "Ruta urbana y patrimonial de Bembibre en el Bierzo Alto",
+    "frontendMode": "gps"
   }
 }
-

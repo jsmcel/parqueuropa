@@ -1,5 +1,6 @@
 import museoFerrocarrilConfig from './museo_ferrocarril/config';
 import parqueEuropaConfig from './parque_europa/config';
+import bembibreConfig from './bembibre/config';
 
 export const DEFAULT_TENANT_ID = 'museo_ferrocarril';
 
@@ -15,6 +16,12 @@ export const tenants = {
     type: 'type2',
     config: parqueEuropaConfig,
     aliases: ['parqueuropa', 'europa'],
+  },
+  bembibre: {
+    id: 'bembibre',
+    type: 'type2',
+    config: bembibreConfig,
+    aliases: ['bembibre', 'bierzoalto'],
   },
 };
 
