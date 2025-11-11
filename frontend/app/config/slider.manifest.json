@@ -1,0 +1,203 @@
+{
+  "monuments": [
+    {
+      "slug": "torre-eiffel-paris",
+      "title": "Torre Eiffel",
+      "city": "París",
+      "country": "Francia",
+      "wikimedia_files": [
+        "File:Tour Eiffel Wikimedia Commons.jpg",
+        "File:Eiffel tower from trocadero.jpg",
+        "File:Eiffel Tower by the Seine river, Paris, 2 March 2014.jpg"
+      ],
+      "aliases": ["Torre Eiffel", "Torre Eiffel (París)"]
+    },
+    {
+      "slug": "puente-de-londres-tower-bridge",
+      "title": "Tower Bridge",
+      "city": "Londres",
+      "country": "Reino Unido",
+      "wikimedia_files": [
+        "File:Tower Bridge River Thames Night.jpg",
+        "File:Tower Bridge on a sunny day.jpg",
+        "File:London – Panorama – Tower Bridge - The Shard - panoramio.jpg"
+      ],
+      "aliases": ["Puente de Londres", "Puente Londres", "Tower Bridge"]
+    },
+    {
+      "slug": "fontana-di-trevi-roma",
+      "title": "Fontana di Trevi",
+      "city": "Roma",
+      "country": "Italia",
+      "wikimedia_files": [
+        "File:Fontana di Trevi, Roma fc02.jpg",
+        "File:Trevi Fountain closeup.jpg",
+        "File:Fuente de Trevi, Roma, Italia, 2022-09-15, DD 05.jpg"
+      ],
+      "aliases": ["Fontana de Trevi", "Fontana Trevi"]
+    },
+    {
+      "slug": "puerta-de-brandenburgo-berlin",
+      "title": "Puerta de Brandeburgo",
+      "city": "Berlín",
+      "country": "Alemania",
+      "wikimedia_files": [
+        "File:Brandenburg-Gate-Berlin-at-night.jpg",
+        "File:Brandenburg Gate Berlin night.jpg"
+      ],
+      "aliases": ["Puerta de Brandeburgo", "Puerta Brandeburgo"]
+    },
+    {
+      "slug": "atomium-bruselas",
+      "title": "Atomium",
+      "city": "Bruselas",
+      "country": "Bélgica",
+      "wikimedia_files": [
+        "File:Atomium-Brussels-3.jpg",
+        "File:Atomium @ Brussels (8177151787).jpg",
+        "File:Atomium - Brussels (C. Friese) - Flickr.jpg"
+      ],
+      "aliases": ["Atomium"]
+    },
+    {
+      "slug": "manneken-pis-bruselas",
+      "title": "Manneken Pis",
+      "city": "Bruselas",
+      "country": "Bélgica",
+      "wikimedia_files": [
+        "File:Bruxelles Manneken Pis.jpg",
+        "File:Manneken Pis Brussel.jpg",
+        "File:2005 manneke pis01.jpg"
+      ],
+      "aliases": ["Manneken Pis"]
+    },
+    {
+      "slug": "molinos-kinderdijk-paises-bajos",
+      "title": "Molinos de Kinderdijk",
+      "city": "Kinderdijk",
+      "country": "Países Bajos",
+      "wikimedia_files": [
+        "File:Kinderdijk Windmills Panorama.jpg",
+        "File:Kinderdijk windmills.jpg",
+        "File:Kinderdijk windmill.jpg"
+      ],
+      "aliases": ["Molinos de Kinderdijk", "Molinos Holandeses", "Molinos Holanda"]
+    },
+    {
+      "slug": "muro-de-berlin-berlin",
+      "title": "Muro de Berlín (East Side Gallery)",
+      "city": "Berlín",
+      "country": "Alemania",
+      "wikimedia_files": [
+        "File:Berlin Wall East Side Gallery 1.JPG",
+        "File:Berlin Wall East Side Gallery - panoramio (1).jpg",
+        "File:Berlin Wall near East Side Gallery.JPG"
+      ],
+      "aliases": ["Muro de Berlín", "East Side Gallery"]
+    },
+    {
+      "slug": "puerta-de-alcala-madrid",
+      "title": "Puerta de Alcalá",
+      "city": "Madrid",
+      "country": "España",
+      "wikimedia_files": [
+        "File:Puerta de Alcalá 2025.jpg",
+        "File:Puerta de Alcalá (Madrid) 10.jpg",
+        "File:Puerta de Alcalá 1.jpg"
+      ],
+      "aliases": ["Puerta de Alcalá", "Puerta Alcala"]
+    },
+    {
+      "slug": "torre-de-belem-lisboa",
+      "title": "Torre de Belém",
+      "city": "Lisboa",
+      "country": "Portugal",
+      "wikimedia_files": [
+        "File:Torre de Belém, Lisbon 33.jpg",
+        "File:Torre de Belém, Lisbon 40.jpg"
+      ],
+      "aliases": ["Torre de Belém", "Torre Belem"]
+    },
+    {
+      "slug": "puente-de-van-gogh-arles",
+      "title": "Puente de Van Gogh (Langlois)",
+      "city": "Arlés",
+      "country": "Francia",
+      "wikimedia_files": [
+        "File:Pont d'Arles, drawbridge at Arles (South France, when he lived there). The famous painting from Vincent van Gogh 1888 - panoramio.jpg",
+        "File:Vincent van Gogh - Bridge at Arles (Pont de Langlois) F397.jpg",
+        "File:Langlois Bridge at Arles, The.jpg"
+      ],
+      "aliases": ["Puente Van Gogh", "Puente de Langlois", "Pont de Langlois"]
+    },
+    {
+      "slug": "barco-vikingo-oslo-oseberg",
+      "title": "Barco Vikingo (Oseberg)",
+      "city": "Oslo",
+      "country": "Noruega",
+      "wikimedia_files": [
+        "File:Oseberg Ship - Viking Ship Museum (Oslo).jpg",
+        "File:The Oseberg ship, Norway - 6370652373 Viking Ship Museum, Oslo, Norway (Vikingskipshuset på Bygdøy) 2011.jpg",
+        "File:The Oseberg ship. Viking Ship Museum, Oslo, Norway (Vikingskipshuset på Bygdøy) 2011.jpg"
+      ],
+      "aliases": ["Barco Vikingo", "Barco Vikingo Oseberg"]
+    },
+    {
+      "slug": "david-miguel-angel-florencia",
+      "title": "David de Miguel Ángel",
+      "city": "Florencia",
+      "country": "Italia",
+      "wikimedia_files": [
+        "File:Michelangelo's David (Galleria dell'Accademia, Firenze, Italy).jpg",
+        "File:Michelangelo's David-Galleria dell'Accademia.jpg",
+        "File:'David' by Michelangelo Fir JBU004.jpg"
+      ],
+      "aliases": ["David de Miguel Ángel", "David de Miguel Angel", "David Miguel Angel", "David"]
+    },
+    {
+      "slug": "plaza-de-espana-madrid",
+      "title": "Plaza de España (Madrid)",
+      "city": "Madrid",
+      "country": "España",
+      "wikimedia_files": [
+        "File:Plaza de España de Madrid - 01.jpg",
+        "File:Plaza de Espana Madrid.JPG",
+        "File:Plaza de España (Madrid) 23.jpg"
+      ],
+      "aliases": ["Plaza de España", "Plaza España", "Plaza de España Madrid"]
+    },
+    {
+      "slug": "teatro-griego-epidaurus",
+      "title": "Teatro griego de Epidauro",
+      "city": "Epidauro",
+      "country": "Grecia",
+      "wikimedia_files": [
+        "File:Epidaurus Theater.jpg",
+        "File:Ancient theatre of Epidaurus (50841792791).jpg",
+        "File:Greek Theatre, Epidaurus MET ap50.130.141bb recto.jpg"
+      ],
+      "aliases": ["Teatro Griego", "Teatro de Epidauro"]
+    },
+    {
+      "slug": "las-tres-gracias-rubens-prado",
+      "title": "Las Tres Gracias (Rubens)",
+      "city": "Madrid",
+      "country": "España",
+      "wikimedia_files": [
+        "File:Rubens, Peter Paul - The Three Graces.jpg",
+        "File:The Three Graces, by Peter Paul Rubens, from Prado in Google Earth.jpg",
+        "File:Peter Paul Rubens - The Three Graces - WGA20323.jpg"
+      ],
+      "aliases": ["Las Tres Gracias", "Tres Gracias"]
+    },
+    {
+      "slug": "la-sirenita-copenhague",
+      "title": "La Sirenita (Copenhague)",
+      "city": "Copenhague",
+      "country": "Dinamarca",
+      "license_note": "Obra con copyright en Dinamarca hasta 2030; revisar licencia antes de uso comercial.",
+      "wikimedia_files": [],
+      "aliases": ["La Sirenita", "La Sirenita Copenhague"]
+    }
+  ]
+}

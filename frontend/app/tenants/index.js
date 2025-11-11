@@ -2,7 +2,7 @@ import museoFerrocarrilConfig from './museo_ferrocarril/config';
 import parqueEuropaConfig from './parque_europa/config';
 import bembibreConfig from './bembibre/config';
 
-export const DEFAULT_TENANT_ID = 'museo_ferrocarril';
+export const DEFAULT_TENANT_ID = 'parque_europa';
 
 export const tenants = {
   museo_ferrocarril: {

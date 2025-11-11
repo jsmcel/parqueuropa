@@ -1,0 +1,27 @@
+{
+  "tenantId": "parqueuropa",
+  "displayName": "Parque Europa",
+  "defaultLocale": "es",
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "assets": {
+    "homeHero": "assets/home/home-hero-1920x1080.jpg",
+    "icons": {
+      "favicon": "assets/icons/favicon.png",
+      "icon": "assets/icons/icon-1024.png",
+      "adaptiveIcon": {
+        "foregroundImage": "assets/icons/adaptive-icon-foreground.png",
+        "backgroundImage": "assets/icons/adaptive-icon-background.png"
+      },
+      "splash": "assets/icons/splash-2048.png"
+    }
+  },
+  "theme": "config/theme.parqueuropa.ts",
+  "sliderManifest": "config/slider.manifest.json",
+  "notes": [
+    "Imagenes reales de los monumentos en sus ubicaciones originales.",
+    "La Sirenita se excluye por defecto por restricciones de copyright en Dinamarca (vigentes hasta 2030)."
+  ]
+}

@@ -18,24 +18,25 @@ export default {
 
   // Configuración de colores para Parque Europa
   COLORS: {
-    PRIMARY: '#1F7A5C', // Verde bosque profundo
-    SECONDARY: '#1B4B9B', // Azul europeo
-    ACCENT: '#F6F8F2', // Marfil claro
-    TEXT: '#1F2A37', // Gris-azul oscuro
-    BACKGROUND: '#EFF3EB', // Verde muy suave
-    DARK_ACCENT: '#155244', // Verde oscuro
-    LIGHT_ACCENT: '#CDE3D7', // Verde suave
-    EUROPE_BLUE: '#1B4B9B',
-    GOLD: '#E8B10E'
+    PRIMARY: '#003399',
+    SECONDARY: '#FFCC00',
+    ACCENT: '#F7F9FC',
+    TEXT: '#0B1B3A',
+    BACKGROUND: '#FFFFFF',
+    DARK_ACCENT: '#0B1B3A',
+    LIGHT_ACCENT: '#E6EBFF',
+    EUROPE_BLUE: '#003399',
+    GOLD: '#FFCC00',
   },
 
   ASSETS: {
-    heroBanner: require('./assets/banner_ferroviario.jpg'),
+    heroBanner: require('../../assets/home/home-hero-1920x1080.jpg'),
     placeholderSmall: require('./assets/placeholder_small.png'),
     placeholderLarge: require('./assets/placeholder_large.png'),
     splashImage: require('./assets/splash.png'),
     appIcon: require('./assets/icon.png'),
     adaptiveIcon: require('./assets/adaptive-icon.png'),
+    favicon: require('./assets/favicon.png'),
   },
 
   FONT_FILES: {
@@ -65,6 +66,13 @@ export default {
     { icon: 'map', label: 'Recorrido guiado de 2.9 km' },
     { icon: 'musical-notes', label: '18 relatos inmersivos' },
     { icon: 'leaf', label: 'Naturaleza y aire libre' },
+  ],
+  HERO_SLUGS: [
+    'puerta-de-alcala-madrid',
+    'torre-eiffel-paris',
+    'molinos-kinderdijk-paises-bajos',
+    'atomium-bruselas',
+    'fontana-di-trevi-roma',
   ],
 
   CATEGORIES: [

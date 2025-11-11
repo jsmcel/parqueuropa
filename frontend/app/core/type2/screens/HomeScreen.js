@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
   Switch,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from 'react-native-elements';
@@ -19,6 +20,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTenant } from '../../shared/context/TenantContext.js';
 import { useTriggerMode } from '../../shared/context/TriggerModeContext.js';
 import { responsiveStyles } from '../../shared/styles/responsiveStyles.js';
+import sliderManifest from '../../../config/slider.manifest.json';
+import attributions from '../../../assets/ATTRIBUTIONS.json';
+import monumentImages from '../../../assets/monuments/index.js';
 
 const { width, height } = Dimensions.get('window');
 const FALLBACK_PLACEHOLDER_SMALL = require('../../shared/assets/images/placeholder_small.png');
@@ -30,6 +34,15 @@ const DEFAULT_HERO_CHIPS = [
 ];
 
 const MAX_HISTORY_ITEMS = 6;
+const sliderMonuments = Array.isArray(sliderManifest?.monuments)
+  ? sliderManifest.monuments
+  : [];
+const sliderManifestMap = sliderMonuments.reduce((acc, item) => {
+  if (item?.slug) {
+    acc[item.slug] = item;
+  }
+  return acc;
+}, {});
 
 const createStyles = (colors) =>
   StyleSheet.create({
@@ -103,11 +116,49 @@ const createStyles = (colors) =>
       alignItems: 'center',
       justifyContent: 'center',
       padding: 12,
+      overflow: 'hidden',
     },
     heroImage: {
       width: '100%',
       height: '100%',
-      tintColor: colors.SECONDARY || '#1B4B9B',
+      borderRadius: 16,
+    },
+    heroSlideMeta: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      bottom: 16,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      borderRadius: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    heroSlideTitle: {
+      color: '#fff',
+      fontSize: 14,
+      fontFamily: 'railway',
+    },
+    heroSlideSubtitle: {
+      color: '#e5e7eb',
+      fontSize: 12,
+      fontFamily: 'industrial',
+      marginTop: 2,
+    },
+    heroDots: {
+      position: 'absolute',
+      bottom: 8,
+      alignSelf: 'center',
+      flexDirection: 'row',
+    },
+    heroDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginHorizontal: 3,
+      backgroundColor: '#ffffff55',
+    },
+    heroDotActive: {
+      backgroundColor: colors.SECONDARY || '#FFCC00',
     },
     statsRow: {
       flexDirection: 'row',
@@ -333,7 +384,82 @@ const HomeScreen = ({ navigation }) => {
   const audioModes = config.AUDIO_MODES || [];
   const isGpsTenant = type === 'type2' || config.FRONTEND_MODE === 'gps';
 
+  const heroSlides = useMemo(() => {
+    const desiredSlugs = Array.isArray(config.HERO_SLUGS)
+      ? config.HERO_SLUGS
+      : [];
+    const slides = [];
+
+    const pushSlide = (slug, entry, index = 0) => {
+      const meta = sliderManifestMap[slug];
+      const title = meta?.title || entry?.title || slug;
+      const subtitleParts = [meta?.city, meta?.country].filter(Boolean);
+      const subtitle = subtitleParts.join(' · ');
+      const imageSource =
+        entry?.image ||
+        (entry?.url ? { uri: entry.url } : config.ASSETS?.heroBanner);
+
+      slides.push({
+        key: `${slug}-${index}`,
+        slug,
+        title,
+        subtitle,
+        imageSource,
+      });
+    };
+
+    desiredSlugs.forEach((slug) => {
+      if (!slug) return;
+      const localEntries = Array.isArray(monumentImages[slug])
+        ? monumentImages[slug]
+        : [];
+      const fallbackEntries = Array.isArray(attributions[slug])
+        ? attributions[slug]
+        : [];
+      const source = localEntries.length ? localEntries : fallbackEntries;
+      if (source.length) {
+        source.slice(0, 2).forEach((entry, index) => pushSlide(slug, entry, index));
+      }
+    });
+
+    if (!slides.length && config.ASSETS?.heroBanner) {
+      slides.push({
+        key: 'default-hero',
+        slug: 'hero',
+        title: config.PARK_INFO?.name || config.APP_NAME || 'Parque Europa',
+        subtitle: config.PARK_INFO?.location || '',
+        imageSource:
+          config.ASSETS?.heroBanner ||
+          config.ASSETS?.placeholderLarge ||
+          FALLBACK_PLACEHOLDER_LARGE,
+      });
+    }
+
+    return slides.length ? slides.slice(0, 6) : slides;
+  }, [config]);
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
+  const heroAutoTimer = useRef(null);
+
+  useEffect(() => {
+    setHeroSlideIndex(0);
+  }, [heroSlides.length]);
+
+  useEffect(() => {
+    if (heroSlides.length <= 1) return undefined;
+    heroAutoTimer.current = setInterval(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 4500);
+    return () => {
+      if (heroAutoTimer.current) {
+        clearInterval(heroAutoTimer.current);
+        heroAutoTimer.current = null;
+      }
+    };
+  }, [heroSlides.length]);
+
+  const currentHeroSlide = heroSlides[heroSlideIndex] || null;
   const heroIllustration =
+    currentHeroSlide?.imageSource ||
     config.ASSETS?.heroBanner ||
     config.ASSETS?.placeholderLarge ||
     FALLBACK_PLACEHOLDER_LARGE;
@@ -499,7 +625,33 @@ const HomeScreen = ({ navigation }) => {
           </View>
           <View style={styles.heroImageWrapper}>
             <View style={styles.heroImageBackdrop}>
-              <Image source={heroIllustration} style={styles.heroImage} resizeMode="contain" />
+              <Image source={heroIllustration} style={styles.heroImage} resizeMode="cover" />
+              {currentHeroSlide ? (
+                <View style={styles.heroSlideMeta}>
+                  <Text style={styles.heroSlideTitle} numberOfLines={1}>
+                    {currentHeroSlide.title}
+                  </Text>
+                  {currentHeroSlide.subtitle ? (
+                    <Text style={styles.heroSlideSubtitle} numberOfLines={1}>
+                      {currentHeroSlide.subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+              {heroSlides.length > 1 && (
+                <View style={styles.heroDots}>
+                  {heroSlides.map((slide, index) => (
+                    <TouchableOpacity
+                      key={slide.key}
+                      style={[
+                        styles.heroDot,
+                        index === heroSlideIndex && styles.heroDotActive,
+                      ]}
+                      onPress={() => setHeroSlideIndex(index)}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
           </View>
         </View>

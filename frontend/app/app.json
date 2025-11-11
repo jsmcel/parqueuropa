@@ -4,12 +4,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "newArchEnabled": true,
-    "icon": "./tenants/museo_ferrocarril/assets/icon.png",
+    "icon": "./assets/icons/icon-1024.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./tenants/museo_ferrocarril/assets/splash.png",
+      "image": "./assets/icons/splash-2048.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#003399"
     },
     "ios": {
       "supportsTablet": true,
@@ -19,8 +19,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./tenants/museo_ferrocarril/assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icons/adaptive-icon-foreground.png",
+        "backgroundImage": "./assets/icons/adaptive-icon-background.png",
+        "backgroundColor": "#003399"
       },
       "permissions": [
         "android.permission.CAMERA"
@@ -28,7 +29,7 @@
       "package": "com.joscelino.guideitor"
     },
     "web": {
-      "favicon": "./tenants/museo_ferrocarril/assets/favicon.png"
+      "favicon": "./assets/icons/favicon.png"
     },
     "plugins": [
       "expo-font",

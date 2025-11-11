@@ -11,7 +11,8 @@ import {
   Alert,
   SafeAreaView,
   BackHandler,
-  Platform
+  Platform,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Divider } from 'react-native-elements'; // Button ya está importado
@@ -22,6 +23,23 @@ import AudioPlayer from '../components/AudioPlayer'; // Importar componente
 import { getAudioFileUrl } from '../services/apiService.js'; // Import the new service
 import { usePlayback } from '../context/PlaybackContext.js';
 import { responsiveStyles } from '../styles/responsiveStyles.js';
+import sliderManifest from '../../../config/slider.manifest.json';
+import attributions from '../../../assets/ATTRIBUTIONS.json';
+import monumentImages from '../../../assets/monuments/index.js';
+
+const resolveAssetUri = (source) => {
+  if (!source) return null;
+  if (Image && typeof Image.resolveAssetSource === 'function') {
+    const resolved = Image.resolveAssetSource(source);
+    if (resolved && resolved.uri) {
+      return resolved.uri;
+    }
+  }
+  if (typeof source === 'object' && typeof source.uri === 'string') {
+    return source.uri;
+  }
+  return null;
+};
 
 // Función para comprimir imágenes en web para ahorrar espacio en localStorage
 const compressImageForHistory = async (imageUri) => {
@@ -82,13 +100,65 @@ const compressImageForHistory = async (imageUri) => {
 
 const { width } = Dimensions.get('window');
 const MAX_HISTORY_ITEMS = 15;
+const SLIDER_IMAGE_HEIGHT = Math.min(width * 0.6, 360);
+const sliderMonuments = Array.isArray(sliderManifest?.monuments)
+  ? sliderManifest.monuments
+  : [];
+
+const normalizeText = (value = '') =>
+  value
+    ?.toString()
+    ?.toLowerCase()
+    ?.normalize('NFD')
+    ?.replace(/[\u0300-\u036f]/g, '')
+    ?.replace(/[^a-z0-9]+/g, ' ')
+    ?.trim();
+
+const buildAliasMap = (monuments, extraAliases = {}) => {
+  const map = new Map();
+  const addAlias = (alias, slug) => {
+    if (!alias || !slug) return;
+    const normalized = normalizeText(alias);
+    if (!normalized) return;
+    map.set(normalized, slug);
+  };
+
+  monuments.forEach((monument) => {
+    if (!monument?.slug) return;
+    const { slug, title, city, aliases = [] } = monument;
+    addAlias(slug, slug);
+    addAlias(title, slug);
+    addAlias(`${title || ''} ${city || ''}`.trim(), slug);
+    aliases.forEach((alias) => addAlias(alias, slug));
+  });
+
+  Object.entries(extraAliases || {}).forEach(([alias, slug]) => addAlias(alias, slug));
+  return map;
+};
+
+const buildManifestFallback = (monument) => {
+  if (!monument?.wikimedia_files?.length) return [];
+  return monument.wikimedia_files.map((fileTitle) => {
+    const clean = (fileTitle || '').replace(/^File:/i, '');
+    const encoded = encodeURIComponent(clean);
+    return {
+      title: monument.title,
+      filename: clean,
+      url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encoded}?width=1600`,
+      credit: [monument.city, monument.country].filter(Boolean).join(' · '),
+      license: null,
+      author: null,
+    };
+  });
+};
 
 const ResultScreen = ({ route, navigation }) => {
   const { recognitionResult, imageUri: routeImageUri, audioMode: initialAudioMode } = route.params || {};
   // Destructure userSelected along with pieceName and confidence
   const { pieceName, confidence, userSelected } = recognitionResult || {};
 
-  const { config } = useTenant();
+  const { config, type } = useTenant();
+  const isGpsTenant = type === 'type2' || config?.FRONTEND_MODE === 'gps';
   const colors = config?.COLORS || {};
   const rawFonts = config?.FONTS || {};
   const fonts = useMemo(() => {
@@ -115,7 +185,115 @@ const ResultScreen = ({ route, navigation }) => {
   const [audioUrl, setAudioUrl] = useState('');
   const [autoPlayPref, setAutoPlayPref] = useState(true);
   const [audioError, setAudioError] = useState(null);
-  
+  const [activeSlide, setActiveSlide] = useState(0);
+  const sliderAliasMap = useMemo(
+    () => buildAliasMap(sliderMonuments, config?.SLIDER_ALIASES),
+    [config]
+  );
+  const sliderSlug = useMemo(() => {
+    if (!sliderAliasMap || sliderAliasMap.size === 0) {
+      return null;
+    }
+    const candidates = [];
+    if (pieceName) candidates.push(pieceName);
+
+    const recognitionFields = ['slug', 'pieceId', 'id', 'label', 'monumentId', 'primaryName'];
+    recognitionFields.forEach((field) => {
+      if (recognitionResult?.[field]) {
+        candidates.push(recognitionResult[field]);
+      }
+    });
+
+    const itineraryStops = Array.isArray(config?.ITINERARY_STOPS) ? config.ITINERARY_STOPS : [];
+    itineraryStops.forEach((stop) => {
+      if (stop?.name) candidates.push(stop.name);
+      if (stop?.id) candidates.push(stop.id);
+      if (stop?.slug) candidates.push(stop.slug);
+    });
+
+    for (const candidate of candidates) {
+      const slug = sliderAliasMap.get(normalizeText(candidate));
+      if (slug) return slug;
+    }
+    return null;
+  }, [pieceName, recognitionResult, config, sliderAliasMap]);
+
+  const sliderMeta = useMemo(
+    () => sliderMonuments.find((item) => item.slug === sliderSlug) || null,
+    [sliderSlug]
+  );
+
+  const sliderItems = useMemo(() => {
+    if (!sliderSlug) return [];
+
+    if (Array.isArray(monumentImages?.[sliderSlug]) && monumentImages[sliderSlug].length) {
+      return monumentImages[sliderSlug];
+    }
+
+    if (Array.isArray(attributions?.[sliderSlug]) && attributions[sliderSlug].length) {
+      return attributions[sliderSlug];
+    }
+
+    if (sliderMeta) {
+      return buildManifestFallback(sliderMeta);
+    }
+
+    return [];
+  }, [sliderSlug, sliderMeta]);
+
+  const sliderCurrentItem =
+    sliderItems.length > 0 ? sliderItems[Math.min(activeSlide, sliderItems.length - 1)] : null;
+  const sliderImageUri = useMemo(
+    () => resolveAssetUri(sliderCurrentItem?.image),
+    [sliderCurrentItem]
+  );
+  const primaryImageSource = useMemo(() => {
+    if (displayImageUri) {
+      return { uri: displayImageUri };
+    }
+    if (sliderCurrentItem?.image) {
+      return sliderCurrentItem.image;
+    }
+    if (sliderCurrentItem?.url) {
+      return { uri: sliderCurrentItem.url };
+    }
+    return null;
+  }, [displayImageUri, sliderCurrentItem]);
+  const historyImageUri = useMemo(() => {
+    if (displayImageUri) return displayImageUri;
+    if (sliderImageUri) return sliderImageUri;
+    if (sliderCurrentItem?.localPath) return sliderCurrentItem.localPath;
+    if (sliderCurrentItem?.url) return sliderCurrentItem.url;
+    return null;
+  }, [displayImageUri, sliderImageUri, sliderCurrentItem]);
+  const sliderListRef = useRef(null);
+  const sliderViewabilityRef = useRef(({ viewableItems }) => {
+    if (viewableItems?.length && typeof viewableItems[0].index === 'number') {
+      setActiveSlide(viewableItems[0].index);
+    }
+  });
+  const sliderViewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 });
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [sliderSlug, sliderItems.length]);
+
+  useEffect(() => {
+    if (displayImageUri || sliderItems.length === 0) return;
+    const first = sliderItems[0];
+    if (!first) return;
+    if (first.image) {
+      const resolvedUri = resolveAssetUri(first.image);
+      if (resolvedUri) {
+        setDisplayImageUri(resolvedUri);
+        return;
+      }
+    }
+    if (first.url) {
+      setDisplayImageUri(first.url);
+    }
+  }, [displayImageUri, sliderItems]);
+
   // Ref para el AudioPlayer
   const audioPlayerRef = useRef(null);
   const { setPlaybackState } = usePlayback();
@@ -175,7 +353,7 @@ const ResultScreen = ({ route, navigation }) => {
       }
       
       // Forzar actualización del historial antes de navegar
-      if (pieceName && displayImageUri) {
+      if (pieceName && historyImageUri) {
         console.log(`ResultScreen: Force saving '${pieceName}' to history before going home`);
         try {
           let history = [];
@@ -191,20 +369,23 @@ const ResultScreen = ({ route, navigation }) => {
           }
           
           // En web, comprimir la imagen antes de guardarla para ahorrar espacio
-          let compressedImageUri = displayImageUri;
-          if (Platform.OS === 'web' && displayImageUri) {
+          let imageForHistory = historyImageUri;
+          if (Platform.OS === 'web' && imageForHistory?.startsWith('http')) {
             try {
               // Comprimir imagen para historial (calidad muy baja para ahorrar espacio)
-              compressedImageUri = await compressImageForHistory(displayImageUri);
+              const compressedImageUri = await compressImageForHistory(imageForHistory);
+              if (compressedImageUri) {
+                imageForHistory = compressedImageUri;
+              }
             } catch (error) {
               console.warn('Error compressing image for history in handleGoHome:', error);
-              compressedImageUri = null; // Si falla la compresión, no guardar imagen
+              // mantener imagen original
             }
           }
           
           const newEntry = {
             pieceName: pieceName,
-            imageUri: Platform.OS === 'web' ? compressedImageUri : displayImageUri,
+            imageUri: imageForHistory,
             timestamp: Date.now(),
           };
           
@@ -326,6 +507,8 @@ const ResultScreen = ({ route, navigation }) => {
     );
   }
 
+  const showConfidence = Boolean(confidence) && !isGpsTenant;
+
   if (Platform.OS === 'web') {
     return (
       <SafeAreaView style={responsiveStyles.responsiveSafeArea}> 
@@ -336,9 +519,9 @@ const ResultScreen = ({ route, navigation }) => {
           >
             {/* Imagen y Overlay */}
             <View style={styles.imageContainer}>
-              {displayImageUri ? (
+              {primaryImageSource ? (
                 <Image
-                  source={{ uri: displayImageUri }}
+                  source={primaryImageSource}
                   style={styles.pieceImage}
                   resizeMode="cover"
                   defaultSource={placeholderLarge}
@@ -353,7 +536,7 @@ const ResultScreen = ({ route, navigation }) => {
                   <Ionicons name="share-social-outline" size={24} color="#fff" />
                 </TouchableOpacity>
               </View>
-              {confidence && (
+              {showConfidence && (
                 <View style={styles.confidenceContainer}>
                   <Text style={styles.confidenceText}>{Math.round(confidence * 100)}%</Text>
                   <Ionicons name="checkmark-circle-outline" size={14} color="#fff" style={{marginLeft: 4}}/>
@@ -458,9 +641,9 @@ const ResultScreen = ({ route, navigation }) => {
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
         {/* Imagen y Overlay */}
         <View style={styles.imageContainer}>
-          {displayImageUri ? (
+          {primaryImageSource ? (
               <Image
-                 source={{ uri: displayImageUri }}
+                 source={primaryImageSource}
                  style={styles.pieceImage}
                  resizeMode="cover"
                  defaultSource={placeholderLarge}
@@ -475,13 +658,86 @@ const ResultScreen = ({ route, navigation }) => {
                 <Ionicons name="share-social-outline" size={24} color="#fff" />
               </TouchableOpacity>
            </View>
-           {confidence && (
+           {showConfidence && (
               <View style={styles.confidenceContainer}>
                 <Text style={styles.confidenceText}>{Math.round(confidence * 100)}%</Text>
                 <Ionicons name="checkmark-circle-outline" size={14} color="#fff" style={{marginLeft: 4}}/>
               </View>
            )}
         </View>
+
+        {sliderItems.length > 0 && (
+          <View style={styles.sliderSection}>
+            <FlatList
+              ref={sliderListRef}
+              data={sliderItems}
+              keyExtractor={(item, index) => `${sliderSlug || 'slider'}-${item.filename || index}`}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.sliderList}
+              renderItem={({ item }) => {
+                const imageSource = item.image || (item.url ? { uri: item.url } : null);
+                return (
+                  <View style={styles.sliderImageWrapper}>
+                    <View style={styles.sliderImageFrame}>
+                      {imageSource ? (
+                        <Image source={imageSource} style={styles.sliderImage} resizeMode="cover" />
+                      ) : (
+                        <View style={[styles.sliderImage, styles.sliderImagePlaceholder]}>
+                          <Ionicons
+                            name="image-outline"
+                            size={40}
+                            color={colors.LIGHT_ACCENT || '#cfd5e6'}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              }}
+              onViewableItemsChanged={sliderViewabilityRef.current}
+              viewabilityConfig={sliderViewabilityConfig.current}
+              decelerationRate="fast"
+              snapToAlignment="center"
+            />
+            {sliderItems.length > 1 && (
+              <View style={styles.sliderDots}>
+                {sliderItems.map((_, index) => (
+                  <View
+                    key={`dot-${sliderSlug || 'slider'}-${index}`}
+                    style={[
+                      styles.sliderDot,
+                      index === activeSlide && styles.sliderDotActive,
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+            <View style={styles.sliderCaption}>
+              <Text style={styles.sliderCaptionTitle}>
+                {sliderMeta?.title || pieceName}
+              </Text>
+              {sliderMeta && (
+                <Text style={styles.sliderCaptionSubtitle}>
+                  {[sliderMeta.city, sliderMeta.country].filter(Boolean).join(' · ')}
+                </Text>
+              )}
+              {sliderCurrentItem?.credit && (
+                <Text style={styles.sliderCreditText} numberOfLines={2}>
+                  {sliderCurrentItem.credit}
+                </Text>
+              )}
+              {(sliderCurrentItem?.license || sliderCurrentItem?.author) && (
+                <Text style={styles.sliderLicenseText} numberOfLines={1}>
+                  {[sliderCurrentItem.license, sliderCurrentItem.author]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Contenedor Principal de Información */}
         <View style={styles.infoContainer}>
@@ -572,7 +828,14 @@ const ResultScreen = ({ route, navigation }) => {
 };
 
 // --- Estilos (Añadir estilos para el nuevo botón) ---
-const createStyles = (colors, fonts) => StyleSheet.create({
+const createStyles = (colors, fonts) => {
+  const accentBase = colors.LIGHT_ACCENT || '#dfe7ff';
+  const primaryColor = colors.PRIMARY || '#1a3c6e';
+  const secondaryColor = colors.SECONDARY || '#ffb347';
+  const darkAccent = colors.DARK_ACCENT || '#22304d';
+  const textColor = colors.TEXT || '#0b1b3a';
+
+  return StyleSheet.create({
   // ... (todos los estilos anteriores se mantienen) ...
   safeArea: {
     flex: 1,
@@ -585,7 +848,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
     width: '100%',
     height: width * 0.8,
     position: 'relative',
-    backgroundColor: colors.LIGHT_ACCENT + '40',
+    backgroundColor: `${accentBase}40`,
   },
   pieceImage: {
     width: '100%',
@@ -596,7 +859,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
        height: '100%',
        justifyContent: 'center',
        alignItems: 'center',
-       backgroundColor: colors.LIGHT_ACCENT + '60',
+       backgroundColor: `${accentBase}60`,
    },
   imageOverlay: {
     position: 'absolute',
@@ -630,27 +893,99 @@ const createStyles = (colors, fonts) => StyleSheet.create({
     fontFamily: 'industrial',
     fontWeight: 'bold',
   },
+  sliderSection: {
+    marginTop: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  sliderList: {
+    width: '100%',
+  },
+  sliderImageWrapper: {
+    width,
+    paddingHorizontal: 20,
+  },
+  sliderImageFrame: {
+    width: '100%',
+    height: SLIDER_IMAGE_HEIGHT,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: `${accentBase}40`,
+  },
+  sliderImage: {
+    width: '100%',
+    height: '100%',
+  },
+  sliderImagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: `${accentBase}55`,
+  },
+  sliderDots: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  sliderDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+    backgroundColor: `${accentBase}80`,
+  },
+  sliderDotActive: {
+    backgroundColor: primaryColor,
+  },
+  sliderCaption: {
+    marginTop: 10,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  sliderCaptionTitle: {
+    fontFamily: 'railway',
+    fontSize: 18,
+    color: textColor,
+  },
+  sliderCaptionSubtitle: {
+    fontFamily: 'industrial',
+    fontSize: 13,
+    color: darkAccent,
+    marginTop: 2,
+  },
+  sliderCreditText: {
+    fontFamily: 'industrial',
+    fontSize: 12,
+    color: textColor,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  sliderLicenseText: {
+    fontFamily: 'industrial',
+    fontSize: 11,
+    color: darkAccent,
+    textAlign: 'center',
+    marginTop: 2,
+  },
   infoContainer: {
     padding: 20,
     paddingTop: 15,
   },
   title: {
     fontSize: 28,
-    color: colors.TEXT,
+    color: textColor,
     marginBottom: 10,
     textAlign: 'center',
     fontFamily: 'railway',
   },
   divider: {
     marginVertical: 20,
-    backgroundColor: colors.LIGHT_ACCENT + '80',
+    backgroundColor: `${accentBase}80`,
   },
   audioModesContainer: {
     marginBottom: 25,
   },
   sectionTitle: {
     fontSize: 18,
-    color: colors.TEXT,
+    color: textColor,
     marginBottom: 12,
     fontFamily: 'railway',
   },
@@ -666,15 +1001,15 @@ const createStyles = (colors, fonts) => StyleSheet.create({
     marginRight: 10,
     backgroundColor: '#fff',
     borderWidth: 1.5,
-    borderColor: colors.PRIMARY + '90',
+    borderColor: `${primaryColor}90`,
   },
   audioModeSelected: {
-    backgroundColor: colors.PRIMARY,
-    borderColor: colors.PRIMARY,
+    backgroundColor: primaryColor,
+    borderColor: primaryColor,
   },
   audioModeText: {
     fontSize: 14,
-    color: colors.PRIMARY,
+    color: primaryColor,
     marginLeft: 8,
     fontFamily: 'industrial',
     fontWeight: 'bold',
@@ -686,14 +1021,14 @@ const createStyles = (colors, fonts) => StyleSheet.create({
       height: 150,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: colors.LIGHT_ACCENT + '30',
+      backgroundColor: `${accentBase}30`,
       borderRadius: 15,
       padding: 20,
       marginTop: 10,
   },
   audioPlayerPlaceholderText: {
       fontFamily: 'industrial',
-      color: colors.DARK_ACCENT,
+      color: darkAccent,
       textAlign: 'center',
       fontSize: 14,
   },
@@ -701,7 +1036,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
       marginTop: 15,
       paddingVertical: 10,
       paddingHorizontal: 15,
-      backgroundColor: colors.SECONDARY + '20',
+      backgroundColor: `${secondaryColor}20`,
       borderRadius: 8,
       flexDirection: 'row',
       alignItems: 'center',
@@ -709,7 +1044,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
   },
   audioErrorText: {
       flex: 1,
-      color: colors.SECONDARY,
+      color: secondaryColor,
       fontFamily: 'industrial',
       fontSize: 13,
       marginLeft: 8,
@@ -726,14 +1061,14 @@ const createStyles = (colors, fonts) => StyleSheet.create({
   },
   goHomeButton: {
     backgroundColor: '#fff', // Fondo blanco
-    borderColor: colors.PRIMARY, // Borde color primario
+    borderColor: primaryColor, // Borde color primario
     borderWidth: 1.5,
     borderRadius: 30, // Redondeado
     paddingVertical: 10,
     paddingHorizontal: 25,
   },
   goHomeButtonTitle: {
-    color: colors.PRIMARY, // Texto color primario
+    color: primaryColor, // Texto color primario
     fontFamily: 'railway',
     fontSize: 16,
   },
@@ -748,7 +1083,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
   },
   errorTitle: {
     fontSize: 24,
-    color: colors.TEXT,
+    color: textColor,
     marginTop: 20,
     marginBottom: 15,
     textAlign: 'center',
@@ -756,7 +1091,7 @@ const createStyles = (colors, fonts) => StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: colors.DARK_ACCENT,
+    color: darkAccent,
     textAlign: 'center',
     marginBottom: 30,
     fontFamily: 'industrial',
@@ -775,12 +1110,13 @@ const createStyles = (colors, fonts) => StyleSheet.create({
   userSelectedText: { // Style for the user-selected indicator
     fontSize: 13,
     fontStyle: 'italic',
-    color: colors.DARK_ACCENT || '#555',
+    color: darkAccent,
     textAlign: 'center',
     marginTop: 0, // Adjusted to fit nicely below the title
     marginBottom: 12, // Space before the divider
     fontFamily: fonts?.industrial || 'sans-serif',
   },
-});
+  });
+};
 
 export default ResultScreen;
