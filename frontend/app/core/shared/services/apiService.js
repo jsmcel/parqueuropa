@@ -138,13 +138,17 @@ export const getAudioInfo = async (tenantId, pieceId, mode, language = 'es') =>
   get(`/api/audio/${tenantId}/${pieceId}/${mode}/${language}`);
 
 export function getAudioFileUrl(tenantId, pieceId, mode, language = 'es') {
-  const { config, explicitApiUrl } = requireContext();
-  const baseUrl = resolveApiUrl(explicitApiUrl, config.API_URL);
+  const baseUrl = getApiBaseUrl();
   const safePieceId = encodeURIComponent(pieceId);
   const safeMode = encodeURIComponent(mode);
   const safeLanguage = encodeURIComponent(language);
   const safeTenant = encodeURIComponent(tenantId);
   return `${baseUrl}/api/audio/${safeTenant}/${safePieceId}/${safeMode}/${safeLanguage}?tenant_id=${safeTenant}`;
+}
+
+export function getApiBaseUrl() {
+  const { config, explicitApiUrl } = requireContext();
+  return resolveApiUrl(explicitApiUrl, config.API_URL);
 }
 
 export const sendFeedback = async (rating, comment, deviceInfo) => {

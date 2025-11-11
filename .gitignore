@@ -16,12 +16,16 @@ backend/*.log
 backend/.env
 backend/uploads/
 backend/temp/
+backend/tenants/*/media-package.zip
 
 # Frontend specific  
 frontend/node_modules/
 frontend/dist/
 frontend/.expo/
 frontend/web-build/
+frontend/app/monuments/
+frontend/app/dist/
+frontend/app/dist.zip
 
 # Native
 *.orig.*

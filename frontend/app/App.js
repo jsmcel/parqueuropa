@@ -11,6 +11,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 
 import { TenantProvider } from './core/shared/context/TenantContext.js';
+import { TenantMediaProvider } from './core/shared/context/TenantMediaContext.js';
 import { TriggerModeProvider } from './core/shared/context/TriggerModeContext.js';
 import { PlaybackProvider } from './core/shared/context/PlaybackContext.js';
 import { setApiConfig } from './core/shared/services/apiService.js';
@@ -210,26 +211,28 @@ export default function App() {
 
   return (
     <TenantProvider value={tenantDescriptor}>
-      <TriggerModeProvider>
-        <PlaybackProvider>
-          <SafeAreaProvider>
-            <NavigationContainer>
-              <RootStack.Navigator screenOptions={{ headerShown: false }}>
-                <RootStack.Screen name="MainTabs">
-                  {(props) => <MainTabs {...props} tenant={tenantDescriptor} />}
-                </RootStack.Screen>
-                <RootStack.Screen name="ResultScreen" component={ResultScreen} />
-                <RootStack.Screen
-                  name="SuggestionScreen"
-                  component={SuggestionScreen}
-                  options={{ headerShown: true, title: 'Seleccionar identificacion' }}
-                />
-              </RootStack.Navigator>
-            </NavigationContainer>
-            <StatusBar style={getStatusBarStyle(colors.PRIMARY)} />
-          </SafeAreaProvider>
-        </PlaybackProvider>
-      </TriggerModeProvider>
+      <TenantMediaProvider tenantDescriptor={tenantDescriptor}>
+        <TriggerModeProvider>
+          <PlaybackProvider>
+            <SafeAreaProvider>
+              <NavigationContainer>
+                <RootStack.Navigator screenOptions={{ headerShown: false }}>
+                  <RootStack.Screen name="MainTabs">
+                    {(props) => <MainTabs {...props} tenant={tenantDescriptor} />}
+                  </RootStack.Screen>
+                  <RootStack.Screen name="ResultScreen" component={ResultScreen} />
+                  <RootStack.Screen
+                    name="SuggestionScreen"
+                    component={SuggestionScreen}
+                    options={{ headerShown: true, title: 'Seleccionar identificacion' }}
+                  />
+                </RootStack.Navigator>
+              </NavigationContainer>
+              <StatusBar style={getStatusBarStyle(colors.PRIMARY)} />
+            </SafeAreaProvider>
+          </PlaybackProvider>
+        </TriggerModeProvider>
+      </TenantMediaProvider>
     </TenantProvider>
   );
 }

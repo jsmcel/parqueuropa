@@ -26,49 +26,61 @@ export default {
   },
 
   ASSETS: {
-    heroBanner: require('../../core/shared/assets/images/placeholder_large.png'),
-    placeholderSmall: require('../../core/shared/assets/images/placeholder_small.png'),
-    placeholderLarge: require('../../core/shared/assets/images/placeholder_large.png'),
-    splashImage: require('../../core/shared/assets/images/placeholder_small.png'),
-    appIcon: require('../parque_europa/assets/icon.png'),
-    adaptiveIcon: require('../parque_europa/assets/adaptive-icon.png'),
+    heroBanner: require('./assets/hero-banner.jpg'),
+    placeholderSmall: require('./assets/placeholder_small.jpg'),
+    placeholderLarge: require('./assets/placeholder_large.jpg'),
+    splashImage: require('./assets/splash.png'),
+    appIcon: require('./assets/icon.png'),
+    adaptiveIcon: require('./assets/adaptive-icon.png'),
   },
 
   APP_NAME: 'Bembibre Audio Tour',
   TENANT_ID: 'bembibre',
-  PRIMARY_ACTION_LABEL: 'Iniciar paseo urbano',
+  PRIMARY_ACTION_LABEL: 'Comenzar recorrido urbano',
 
   AUDIO_MODES: [
-    { id: 'normal', name: 'Normal', icon: 'information-circle-outline', description: 'Relato equilibrado para adultos.' },
-    { id: 'infantil', name: 'Infantil', icon: 'happy-outline', description: 'Version adaptada para familias y colegios.' },
-    { id: 'experto', name: 'Experto', icon: 'library-outline', description: 'Detalles para amantes de la historia local.' },
-    { id: 'cachondo', name: 'Cachondo', icon: 'beer-outline', description: 'Dato curioso y tono distendido.' }
+    { id: 'normal', name: 'Normal', icon: 'information-circle-outline', description: 'Narracion completa con tono divulgativo.' },
+    { id: 'infantil', name: 'Infantil', icon: 'happy-outline', description: 'Version dinamica con pistas para familias.' },
+    { id: 'experto', name: 'Experto', icon: 'library-outline', description: 'Contexto historico y datos de archivo.' },
+    { id: 'cachondo', name: 'Cachondo', icon: 'beer-outline', description: 'Humor berciano y anecdotas curiosas.' }
   ],
+  HOME_INTRO_AUDIO: {
+    pieceId: 'home-intro',
+    mode: 'normal',
+    language: 'es',
+    title: 'Bienvenida sonora',
+    description: 'Un minuto de contexto antes de empezar la ruta.',
+  },
 
   HERO_CHIPS: [
-    { icon: 'footsteps-outline', label: 'Itinerario urbano de 1 km' },
-    { icon: 'map-outline', label: '6 paradas patrimoniales' },
-    { icon: 'restaurant-outline', label: 'Sabores y compras locales' },
+    { icon: 'home-outline', label: 'Inicio en la Casa de las Culturas' },
+    { icon: 'walk-outline', label: 'Recorrido de 1.4 km / 85 min' },
+    { icon: 'sunny-outline', label: 'Final panoramico en el santuario' },
+  ],
+  HERO_SLUGS: [
+    'casa-de-las-culturas-bembibre',
+    'plaza-mayor-bembibre',
+    'santuario-ecce-homo-bembibre',
   ],
 
   CATEGORIES: [
     {
       id: 'casco_historico',
-      name: 'Casco Historico',
+      name: 'Casco historico vivo',
       icon: 'business-outline',
-      description: 'Plaza, iglesia y casas nobles que narran el origen de Bembibre.'
+      description: 'Plaza Mayor, antigua sinagoga y Villavieja unidos por soportales y pendientes.'
     },
     {
       id: 'museos',
       name: 'Museos y cultura',
       icon: 'school-outline',
-      description: 'Colecciones municipales con arqueologia, etnografia y arte sacro.'
+      description: 'Casa de las Culturas y Museo Alto Bierzo condensan archivos, talleres y colecciones.'
     },
     {
       id: 'miradores',
       name: 'Miradores y romeria',
       icon: 'navigate-outline',
-      description: 'Santuario del Ecce Homo y paisajes del Bierzo Alto.'
+      description: 'Del barrio de La Villavieja al santuario del Ecce Homo con vistas sobre el Boeza.'
     }
   ],
 
@@ -90,25 +102,28 @@ export default {
       email: 'turismo@bembibre.es',
       website: 'https://www.bembibre.es/'
     },
-    description: 'Ruta auto-guiada por el casco antiguo, museos municipales y el santuario del Ecce Homo.',
+    description: 'Itinerario auto-guiado que arranca en la Casa de las Culturas, recorre plaza e iglesia y termina en el santuario del Ecce Homo.',
     highlights: [
-      'Iglesia de San Pedro y antiguo foro comercial',
-      'Museo Alto Bierzo en la Casa de las Culturas',
-      'Colecciones cofrades del Museo de Arte Sacro',
-      'Mirador del santuario del Ecce Homo'
+      'Bienvenida y oficina de turismo en la Casa de las Culturas',
+      'Museo Alto Bierzo con piezas arqueologicas y etnograficas',
+      'Plaza Mayor e Iglesia de San Pedro como nucleo historico',
+      'Mirador y devocion en el santuario del Ecce Homo'
     ]
   },
 
-  ITINERARY_LENGTH_KM: 1.2,
-  ITINERARY_DURATION_MIN: 75,
-  ITINERARY_TOTAL_STOPS: 6,
+  ITINERARY_LENGTH_KM: 1.4,
+  ITINERARY_DURATION_MIN: 85,
+  ITINERARY_TOTAL_STOPS: 8,
+  ITINERARY_SECTION_TITLE: 'Itinerario Bembibre Historico',
   ITINERARY_STOPS: [
-    { order: 1, id: 'Plaza-Mayor', name: 'Plaza Mayor e Iglesia de San Pedro', description: 'Antigua sinagoga y actual templo parroquial con campanario barroco.' },
-    { order: 2, id: 'Museo-Alto-Bierzo', name: 'Museo Alto Bierzo', description: 'Coleccion arqueologica y etnografica del Bierzo Alto.' },
-    { order: 3, id: 'Museo-Arte-Sacro', name: 'Museo de Arte Sacro', description: 'Pasos procesionales y patrimonio cofrade.' },
-    { order: 4, id: 'Santuario-Ecce-Homo', name: 'Santuario del Ecce Homo', description: 'Mirador final y garita del Santo.' },
-    { order: 5, id: 'Gastronomia-Bembibre', name: 'Sabores de Bembibre', description: 'Botillo, pimientos asados y tapas en la avenida Villafranca.' },
-    { order: 6, id: 'Compras-Artesania', name: 'Compras y artesania', description: 'Mercado, charcuterias y talleres locales con productos del Bierzo.' }
+    { order: 1, id: 'casa-de-las-culturas-bembibre', name: 'Casa de las Culturas', description: 'Bienvenida, lucernario y servicios culturales y turisticos.' },
+    { order: 2, id: 'museo-alto-bierzo-bembibre', name: 'Museo Alto Bierzo', description: 'Colecciones arqueologicas y etnograficas dentro de la Casa de las Culturas.' },
+    { order: 3, id: 'plaza-mayor-bembibre', name: 'Plaza Mayor y Casa Consistorial', description: 'Soportales comerciales y ayuntamiento contemporaneo sobre el regimiento historico.' },
+    { order: 4, id: 'iglesia-san-pedro-bembibre', name: 'Iglesia de San Pedro', description: 'Antigua sinagoga con portada romanica y el Cristo Rojo.' },
+    { order: 5, id: 'edificio-villarejo-bembibre', name: 'Edificio Villarejo', description: 'Fachada de 1919 y ferreteria centenaria que simboliza el auge comercial.' },
+    { order: 6, id: 'ruta-modernista-bembibre', name: 'Ruta Modernista', description: 'Fachadas burguesas de la avenida Susana Gonzalez tras el edificio Villarejo.' },
+    { order: 7, id: 'villavieja-castillo-bembibre', name: 'La Villavieja y casa fuerte', description: 'Restos del castillo y vistas al valle del Boeza.' },
+    { order: 8, id: 'santuario-ecce-homo-bembibre', name: 'Santuario del Ecce Homo', description: 'Templo barroco-neoclasico y romeria del patron.' }
   ],
 
   GPS: {

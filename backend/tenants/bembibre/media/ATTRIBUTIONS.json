@@ -1,0 +1,162 @@
+{
+  "plaza-mayor-bembibre": [
+    {
+      "title": "Plaza Mayor y Casa Consistorial",
+      "filename": "plaza-mayor-bembibre.jpg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/plaza-mayor-bembibre/plaza-mayor-bembibre.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/plaza-mayor-bembibre/plaza-mayor-bembibre_web.jpg",
+      "width": 1026,
+      "height": 707,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 195852,
+      "optimizedSize": 102394,
+      "optimizedFilename": "plaza-mayor-bembibre_web.jpg"
+    }
+  ],
+  "iglesia-san-pedro-bembibre": [
+    {
+      "title": "Iglesia de San Pedro",
+      "filename": "iglesia-san-pedro-bembibre.jpg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/iglesia-san-pedro-bembibre/iglesia-san-pedro-bembibre.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/iglesia-san-pedro-bembibre/iglesia-san-pedro-bembibre_web.jpg",
+      "width": 474,
+      "height": 500,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 82784,
+      "optimizedSize": 43883,
+      "optimizedFilename": "iglesia-san-pedro-bembibre_web.jpg"
+    }
+  ],
+  "ruta-modernista-bembibre": [
+    {
+      "title": "Ruta Modernista",
+      "filename": "ruta-modernista-bembibre.jpg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/ruta-modernista-bembibre/ruta-modernista-bembibre.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/ruta-modernista-bembibre/ruta-modernista-bembibre_web.jpg",
+      "width": 1200,
+      "height": 800,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 124088,
+      "optimizedSize": 124088,
+      "optimizedFilename": "ruta-modernista-bembibre_web.jpg"
+    }
+  ],
+  "villavieja-castillo-bembibre": [
+    {
+      "title": "La Villavieja y casa fuerte",
+      "filename": "villavieja-castillo-bembibre.jpeg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/villavieja-castillo-bembibre/villavieja-castillo-bembibre.jpeg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/villavieja-castillo-bembibre/villavieja-castillo-bembibre_web.jpg",
+      "width": 990,
+      "height": 660,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 132735,
+      "optimizedSize": 95410,
+      "optimizedFilename": "villavieja-castillo-bembibre_web.jpg"
+    }
+  ],
+  "santuario-ecce-homo-bembibre": [
+    {
+      "title": "Santuario del Ecce Homo",
+      "filename": "santuario-ecce-homo-bembibre.jpg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/santuario-ecce-homo-bembibre/santuario-ecce-homo-bembibre.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/santuario-ecce-homo-bembibre/santuario-ecce-homo-bembibre_web.jpg",
+      "width": 1200,
+      "height": 800,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 112532,
+      "optimizedSize": 112532,
+      "optimizedFilename": "santuario-ecce-homo-bembibre_web.jpg"
+    }
+  ],
+  "casa-de-las-culturas-bembibre": [
+    {
+      "title": "Casa de las Culturas",
+      "filename": "casa-de-las-culturas-bembibre.jpeg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/casa-de-las-culturas-bembibre/casa-de-las-culturas-bembibre.jpeg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/casa-de-las-culturas-bembibre/casa-de-las-culturas-bembibre_web.jpg",
+      "width": 1200,
+      "height": 675,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 85066,
+      "optimizedSize": 76830,
+      "optimizedFilename": "casa-de-las-culturas-bembibre_web.jpg"
+    }
+  ],
+  "museo-alto-bierzo-bembibre": [
+    {
+      "title": "Museo Alto Bierzo",
+      "filename": "museo-alto-bierzo-bembibre.jpg",
+      "url": null,
+      "localPath": "backend/tenants/bembibre/media/monuments/museo-alto-bierzo-bembibre/museo-alto-bierzo-bembibre.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/museo-alto-bierzo-bembibre/museo-alto-bierzo-bembibre_web.jpg",
+      "width": 1659,
+      "height": 1125,
+      "author": null,
+      "credit": null,
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": null,
+      "retrievedAt": "2025-11-11T14:16:02.469774+00:00",
+      "originalSize": 192097,
+      "optimizedSize": 192097,
+      "optimizedFilename": "museo-alto-bierzo-bembibre_web.jpg"
+    }
+  ],
+  "edificio-villarejo-bembibre": [
+    {
+      "title": "Edificio Villarejo",
+      "filename": "bembibre-casa-villarejo.jpg",
+      "url": "https://bembibredigital.com/sociedad/86260-reportaje-la-ferreteria-villarejo-cierra-definitivamente-despues-de-mas-de-120-anos",
+      "localPath": "backend/tenants/bembibre/media/monuments/edificio-villarejo-bembibre/bembibre-casa-villarejo.jpg",
+      "optimizedPath": "backend/tenants/bembibre/media/monuments/edificio-villarejo-bembibre/bembibre-casa-villarejo_web.jpg",
+      "width": 2048,
+      "height": 1370,
+      "author": "Bembibre Digital",
+      "credit": "Reportaje ferreteria Villarejo",
+      "license": "All rights reserved",
+      "licenseUrl": null,
+      "source": "https://bembibredigital.com",
+      "retrievedAt": "2025-11-11T15:30:00Z",
+      "originalSize": 105586,
+      "optimizedSize": 116876,
+      "optimizedFilename": "bembibre-casa-villarejo_web.jpg"
+    }
+  ]
+}

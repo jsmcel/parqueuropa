@@ -107,7 +107,7 @@ const toLeafletHtml = (
             }
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              maxZoom: 20,
+              maxZoom: 19,
               attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
@@ -171,7 +171,7 @@ const toLeafletHtml = (
             }
 
             if (markerPoints.length > 0) {
-              map.fitBounds(markerPoints, { padding: [40, 40] });
+              map.fitBounds(markerPoints, { padding: [40, 40], maxZoom: 18 });
             } else {
               map.setView([40.4581, -3.4708], 15);
             }

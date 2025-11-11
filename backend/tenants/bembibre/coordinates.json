@@ -1,81 +1,105 @@
 {
   "metadata": {
     "defaultTriggerRadiusMeters": 35,
-    "itineraryLengthKm": 1.0,
-    "itineraryDurationMinutes": 60,
-    "totalStops": 6
+    "itineraryLengthKm": 1.4,
+    "itineraryDurationMinutes": 85,
+    "totalStops": 8
   },
   "monuments": {
-    "Plaza-Mayor": {
-      "id": "Plaza-Mayor",
-      "name": "Plaza Mayor e Iglesia de San Pedro",
+    "plaza-mayor-bembibre": {
+      "id": "plaza-mayor-bembibre",
+      "name": "Plaza Mayor y Casa Consistorial",
       "category": "casco_historico",
-      "summary": "Inicio del recorrido en la plaza mayor y la iglesia de San Pedro, antigua sinagoga del siglo XII convertida en templo cristiano.",
-      "story": "La Plaza Mayor concentra el ayuntamiento y la iglesia parroquial de San Pedro, un templo de origen romanico que fue sinagoga medieval antes de consagrarse en 1490. El campanario barroco coronado por el Sagrado Corazon se alza como simbolo de Bembibre y recuerda la prosperidad minera y comercial de la villa.",
-      "itineraryOrder": 1,
-      "coordinates": {
-        "latitude": 42.6148,
-        "longitude": -6.4163
-      }
-    },
-    "Museo-Alto-Bierzo": {
-      "id": "Museo-Alto-Bierzo",
-      "name": "Museo Alto Bierzo (Casa de las Culturas)",
-      "category": "museos",
-      "summary": "Museo municipal que reune arqueologia, etnografia y donaciones vecinales en la antigua Casa de las Culturas.",
-      "story": "En la Casa de las Culturas, antiguo hospital de peregrinos, se expone una coleccion que repasa la historia del Bierzo Alto: utiles paleoliticos, aras romanas, el Bronce de Bembibre y recreaciones de cocinas, aulas y oficios tradicionales.",
-      "itineraryOrder": 2,
-      "coordinates": {
-        "latitude": 42.6178,
-        "longitude": -6.416
-      }
-    },
-    "Museo-Arte-Sacro": {
-      "id": "Museo-Arte-Sacro",
-      "name": "Museo de Arte Sacro 'El Santo'",
-      "category": "museos",
-      "summary": "Museo cofrade dedicado al Ecce Homo con pasos procesionales, orfebreria y exvotos del siglo XVII al XX.",
-      "story": "Gestionado por la Cofradia del Santo Ecce-Homo, el museo conserva esculturas de Semana Santa, catafalcos, tunicas bordadas y piezas de plateria que documentan siglos de devocion popular.",
+      "summary": "Plaza Mayor irregular con ayuntamiento contemporaneo y la Casa del Peso, epicentro social desde el siglo XV.",
+      "story": "Los soportales comerciales, el consistorio de Veremundo Nunez y el antiguo peso mercantil recuerdan el casco abierto mas alla de las murallas y conectan con los pasadizos hacia La Villavieja.",
       "itineraryOrder": 3,
       "coordinates": {
-        "latitude": 42.6146,
-        "longitude": -6.412
+        "latitude": 42.6150785596895,
+        "longitude": -6.41661975179649
       }
     },
-    "Santuario-Ecce-Homo": {
-      "id": "Santuario-Ecce-Homo",
-      "name": "Santuario del Ecce Homo y Garita del Santo",
-      "category": "miradores",
-      "summary": "Ermita barroca situada en lo alto de Bembibre con mirador hacia el valle del Boeza y la garita votiva.",
-      "story": "La subida final conduce al santuario del patron de Bembibre, rodeado de castanos y con una garita que custodia la imagen durante las romerias. Desde aqui se domina el casco historico y se cierran las procesiones del Santo.",
+    "iglesia-san-pedro-bembibre": {
+      "id": "iglesia-san-pedro-bembibre",
+      "name": "Iglesia de San Pedro Apostol",
+      "category": "casco_historico",
+      "summary": "Templo levantado sobre la antigua sinagoga judia, con portada romanica, espadana de 1740 y memoria del incendio de 1934.",
+      "story": "Sirvio como cuartel del mariscal Ney, sufrio la devastacion revolucionaria y conservo al Cristo Rojo, simbolo de la convivencia entre la aljama y la devocion berciana.",
       "itineraryOrder": 4,
       "coordinates": {
-        "latitude": 42.614,
-        "longitude": -6.41
+        "latitude": 42.61511145277598,
+        "longitude": -6.416435168239424
       }
     },
-    "Gastronomia-Bembibre": {
-      "id": "Gastronomia-Bembibre",
-      "name": "Sabores del Bierzo en Bembibre",
-      "category": "gastronomia",
-      "summary": "Ruta culinaria con botillo, empanadas, pimientos asados y tapeo en torno a la avenida Villafranca.",
-      "story": "Bembibre presume de una cocina basada en carnes de pastos bercianos, huertas del Boeza y vinos D.O. Bierzo. El botillo, protagonista del festival nacional de febrero, convive con empanadas, pimientos asados con sello IGP y una escena de bares donde se sirven tapas, dulces de temporada y copas de mencía o godello. Restaurantes como Meson El Labrador, La Piedra, Molino del Real o el gallego O Pulpeiro mantienen viva la tradición y permiten saborear la identidad local.",
+    "edificio-villarejo-bembibre": {
+      "id": "edificio-villarejo-bembibre",
+      "name": "Edificio Villarejo",
+      "category": "casco_historico",
+      "summary": "Casa comercial de 1919 con miradores sobre cariatides y la historica ferreteria Villarejo en planta baja.",
+      "story": "Encargada por la familia Villarejo al arquitecto Javier Ontanon, su fachada de tres alturas luce miradores apoyados en figuras femeninas, volutas barrocas y una alegoria marina en lo alto. La ferreteria familiar, abierta en 1900 y cerrada en 2024 tras mas de 120 anos de servicio, convirtio este edificio en referente del comercio bembibrense.",
       "itineraryOrder": 5,
       "coordinates": {
-        "latitude": 42.6155,
-        "longitude": -6.4145
+        "latitude": 42.615148,
+        "longitude": -6.416188
       }
     },
-    "Compras-Artesania": {
-      "id": "Compras-Artesania",
-      "name": "Compras y artesania local",
-      "category": "compras",
-      "summary": "Tiendas y mercados con embutidos, conservas, artesania y ferias en torno al mercado de abastos.",
-      "story": "La avenida Villafranca y el mercado concentran comercios como la centenaria Carniceria-Charcuteria Carlos, famosa por sus botillos, cecinas y un dispensador 24h de productos bercianos. En los alrededores se venden quesos, miel de brezo, pimientos asados en conserva y vinos, ademas de artesania en talleres de ceramica, floristas creativos como Arte Vegetal o librerias como Cobos. Los domingos, el mercado ambulante y las ferias del Teatro Benevivere reunen a productores y artistas locales.",
+    "ruta-modernista-bembibre": {
+      "id": "ruta-modernista-bembibre",
+      "name": "Ruta Modernista de la Avenida Susana Gonzalez",
+      "category": "casco_historico",
+      "summary": "El ensanche burgues de 1900 muestra miradores, forjas y fachadas modernistas financiadas por la bonanza minera.",
+      "story": "Tras dedicar una parada al edificio Villarejo, seguimos por la avenida Susana Gonzalez para fijarnos en los miradores metalicos, las herrerias y los juegos neomudejares de casas como la de Higinio Gonzalez o la de Eloy Reigada, escaparate del \"buen vivir\" minero.",
       "itineraryOrder": 6,
       "coordinates": {
-        "latitude": 42.6165,
-        "longitude": -6.4178
+        "latitude": 42.614100008648485,
+        "longitude": -6.417860356393775
+      }
+    },
+    "villavieja-castillo-bembibre": {
+      "id": "villavieja-castillo-bembibre",
+      "name": "Barrio de La Villavieja y casa fuerte",
+      "category": "casco_historico",
+      "summary": "Nucleo medieval con restos del castillo senorial y vistas sobre los linares del Boeza.",
+      "story": "Las calles empinadas conducen a los cimientos descritos por Gil y Carrasco y al mirador que explica la prosperidad agricola tras el fuero concedido por Alfonso IX.",
+      "itineraryOrder": 7,
+      "coordinates": {
+        "latitude": 42.61456336398077,
+        "longitude": -6.414870447981821
+      }
+    },
+    "santuario-ecce-homo-bembibre": {
+      "id": "santuario-ecce-homo-bembibre",
+      "name": "Santuario del Ecce Homo",
+      "category": "miradores",
+      "summary": "Templo barroco-neoclasico del patron del Bierzo Alto con torre de 1808 y la talla del Santo Ecce Homo.",
+      "story": "Reconstruido despues de 1809, alberga la imagen del Cristo atado a la columna que inspira la romeria y marca el cierre del via crucis local.",
+      "itineraryOrder": 8,
+      "coordinates": {
+        "latitude": 42.61451248300837,
+        "longitude": -6.409817477674318
+      }
+    },
+    "casa-de-las-culturas-bembibre": {
+      "id": "casa-de-las-culturas-bembibre",
+      "name": "Casa de las Culturas",
+      "category": "museos",
+      "summary": "Centro cultural inaugurado en 2008 con biblioteca, telecentro y salas expositivas.",
+      "story": "El edificio de Roberto Asensio combina pizarra, caliza y un gran lucernario para alojar talleres, turismo y la agenda cultural de Bembibre.",
+      "itineraryOrder": 1,
+      "coordinates": {
+        "latitude": 42.61792155396903,
+        "longitude": -6.4160082355574675
+      }
+    },
+    "museo-alto-bierzo-bembibre": {
+      "id": "museo-alto-bierzo-bembibre",
+      "name": "Museo Alto Bierzo",
+      "category": "museos",
+      "summary": "Museo municipal que resume la historia del Bierzo Alto con colecciones arqueologicas y etnograficas.",
+      "story": "Reune armas del Bronce Final, aras dedicadas a Cossus y recreaciones de oficios, aulas y hogares bercianos a modo de puente entre los origenes de la villa y las paradas siguientes en la Plaza Mayor.",
+      "itineraryOrder": 2,
+      "coordinates": {
+        "latitude": 42.61800822947965,
+        "longitude": -6.4159559851856764
       }
     }
   }

@@ -35,6 +35,7 @@ const { trackRecognition, trackAudio } = require('./controllers/analyticsControl
 // Multi-tenant dependencies
 const tenantMiddleware = require('./middleware/tenantMiddleware');
 const { getTenantPaths, validateTenantFiles, listTenantsStatus, getBestAvailableModel } = require('./utils/tenantResolver');
+const { getTenantMediaDescriptor, resolveTenantMediaFile } = require('./utils/mediaResolver');
 
 // --- Configuración ---
 const PORT = process.env.BACKEND_PORT || 3000; // Renamed to avoid conflict if frontend also uses PORT
@@ -60,20 +61,10 @@ app.set('trust proxy', process.env.TRUST_PROXY ? parseInt(process.env.TRUST_PROX
 // 1. Helmet para headers de seguridad
 const helmet = require('helmet');
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-    },
-  },
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
 }));
 
 // 2. Rate Limiting
@@ -91,10 +82,28 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // 3. CORS configurado para producción
+const defaultCorsOrigins = [
+  'http://localhost:3000',
+  'http://localhost:19006',
+  'https://guideitor.ethcuela.es',
+  'https://parqueuropa.guidaitor.es',
+];
+const allowedCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : defaultCorsOrigins;
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'http://localhost:19006'],
+  origin(origin, callback) {
+    if (!origin) {
+      // Same-origin or server-to-server
+      return callback(null, true);
+    }
+    if (allowedCorsOrigins.includes('*') || allowedCorsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS not allowed for origin ${origin}`));
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
@@ -323,6 +332,123 @@ app.get('/api/coordinates/:monumentId', (req, res) => {
   });
 });
 
+// ========================================
+// TENANT MEDIA ENDPOINTS
+// ========================================
+app.get('/api/tenant-media/monuments', (req, res) => {
+  try {
+    const tenantId = req.tenant.id;
+    const descriptor = getTenantMediaDescriptor(tenantId);
+
+    if (!descriptor) {
+      return res.status(404).json({
+        error: 'No hay recursos multimedia configurados para este tenant',
+        tenant: tenantId,
+      });
+    }
+
+    const slugFilter = req.query.slug;
+    if (!slugFilter) {
+      return res.json(descriptor);
+    }
+
+    const requestedSlugs = Array.isArray(slugFilter)
+      ? slugFilter
+      : String(slugFilter)
+          .split(',')
+          .map((slug) => slug.trim())
+          .filter(Boolean);
+
+    const filtered = {};
+    requestedSlugs.forEach((slug) => {
+      if (descriptor.monuments[slug]) {
+        filtered[slug] = descriptor.monuments[slug];
+      }
+    });
+
+    return res.json({
+      ...descriptor,
+      filtered: true,
+      requestedSlugs,
+      monuments: filtered,
+    });
+  } catch (error) {
+    logger.error(
+      { err: error.message, stack: error.stack },
+      'Error al cargar el manifiesto multimedia'
+    );
+    return res.status(500).json({
+      error: 'No se pudo cargar el manifiesto multimedia',
+    });
+  }
+});
+
+app.options('/api/tenant-media/file/:slug/:filename', (req, res) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(204);
+});
+
+app.get('/api/tenant-media/file/:slug/:filename', (req, res) => {
+  try {
+    const tenantId = req.tenant.id;
+    const resolved = resolveTenantMediaFile(
+      tenantId,
+      req.params.slug,
+      req.params.filename
+    );
+
+    if (!resolved) {
+      return res.status(404).json({
+        error: 'Archivo no encontrado',
+        tenant: tenantId,
+        slug: req.params.slug,
+        filename: req.params.filename,
+      });
+    }
+
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    const origin = req.headers.origin;
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.removeHeader('Cross-Origin-Opener-Policy');
+    res.removeHeader('Cross-Origin-Embedder-Policy');
+    res.removeHeader('Content-Security-Policy');
+    res.type(path.extname(resolved.filename) || 'application/octet-stream');
+    return res.sendFile(resolved.absolutePath, (err) => {
+      if (err) {
+        logger.error(
+          { err: err.message, stack: err.stack },
+          'Error enviando archivo multimedia'
+        );
+        if (!res.headersSent) {
+          res.status(err.statusCode || 500).json({ error: 'No se pudo servir el archivo solicitado' });
+        }
+      }
+    });
+  } catch (error) {
+    logger.error(
+      { err: error.message, stack: error.stack },
+      'Error resolviendo archivo multimedia'
+    );
+    return res.status(500).json({ error: 'No se pudo servir el archivo solicitado' });
+  }
+});
+
 // --- Lógica de Reconocimiento ONNX Multi-Tenant ---
 let tenantSessions = {}; // Map de sesiones por tenant
 let tenantLabels = {}; // Map de labels por tenant
@@ -371,6 +497,17 @@ function invalidateCoordinatesCache(tenantId) {
     coordinatesCache.clear();
     itineraryCache.clear();
   }
+}
+
+function resolveAllowedOrigin(req) {
+  const originHeader = req.headers.origin;
+  if (!originHeader) {
+    return allowedCorsOrigins[0] || '*';
+  }
+  if (allowedCorsOrigins.includes(originHeader) || allowedCorsOrigins.includes('*')) {
+    return originHeader;
+  }
+  return allowedCorsOrigins[0] || '*';
 }
 
 function monumentsMapToArray(monumentsMap) {

@@ -4,10 +4,10 @@
   "description": "Backend para el sistema GuiEditor",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development node server.js | pino-pretty",
+    "start": "node server-multitenant.js",
+    "dev": "NODE_ENV=development node server-multitenant.js | pino-pretty",
     "test": "jest",
-    "prod": "NODE_ENV=production node server.js",
+    "prod": "NODE_ENV=production node server-multitenant.js",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js"

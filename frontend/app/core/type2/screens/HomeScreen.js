@@ -4,25 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  SafeAreaView,
   TouchableOpacity,
   Image,
   Dimensions,
-  SafeAreaView,
   Alert,
   Platform,
   Switch,
-  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from 'react-native-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Audio } from 'expo-av';
 
 import { useTenant } from '../../shared/context/TenantContext.js';
 import { useTriggerMode } from '../../shared/context/TriggerModeContext.js';
 import { responsiveStyles } from '../../shared/styles/responsiveStyles.js';
-import sliderManifest from '../../../config/slider.manifest.json';
-import attributions from '../../../assets/ATTRIBUTIONS.json';
-import monumentImages from '../../../assets/monuments/index.js';
+import { useTenantMedia } from '../../shared/context/TenantMediaContext.js';
+import { getAudioFileUrl } from '../../shared/services/apiService.js';
 
 const { width, height } = Dimensions.get('window');
 const FALLBACK_PLACEHOLDER_SMALL = require('../../shared/assets/images/placeholder_small.png');
@@ -34,16 +33,21 @@ const DEFAULT_HERO_CHIPS = [
 ];
 
 const MAX_HISTORY_ITEMS = 6;
-const sliderMonuments = Array.isArray(sliderManifest?.monuments)
-  ? sliderManifest.monuments
-  : [];
-const sliderManifestMap = sliderMonuments.reduce((acc, item) => {
-  if (item?.slug) {
-    acc[item.slug] = item;
-  }
-  return acc;
-}, {});
-
+const buildManifestFallbackImages = (monument) => {
+  if (!monument?.wikimedia_files?.length) return [];
+  return monument.wikimedia_files.map((fileTitle) => {
+    const clean = (fileTitle || '').replace(/^File:/i, '');
+    const encoded = encodeURIComponent(clean);
+    const url = `https://commons.wikimedia.org/wiki/Special:FilePath/${encoded}?width=1600`;
+    return {
+      filename: clean,
+      title: monument?.title || clean,
+      url,
+      assetUrl: url,
+      credit: [monument?.city, monument?.country].filter(Boolean).join(' · '),
+    };
+  });
+};
 const createStyles = (colors) =>
   StyleSheet.create({
     safeArea: {
@@ -241,6 +245,30 @@ const createStyles = (colors) =>
       fontWeight: '600',
       fontFamily: 'railway',
     },
+    sectionDescription: {
+      fontSize: 14,
+      fontFamily: 'industrial',
+      color: '#4b5563',
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    homeIntroPlayer: {
+      borderWidth: 1,
+      borderColor: `${colors.PRIMARY || '#1F7A5C'}22`,
+      borderRadius: 16,
+      padding: 12,
+      backgroundColor: '#fff',
+    },
+    homeIntroButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    homeIntroButtonText: {
+      marginLeft: 10,
+      fontFamily: 'industrial',
+      fontSize: 15,
+      color: colors.PRIMARY || '#1F7A5C',
+    },
     itineraryScroller: {
       paddingVertical: 4,
       paddingRight: 20,
@@ -373,7 +401,7 @@ const createStyles = (colors) =>
   });
 
 const HomeScreen = ({ navigation }) => {
-  const { config, type } = useTenant();
+  const { config, type, id: tenantId } = useTenant();
   const [selectedMode, setSelectedMode] = useState('normal');
   const [recentPieces, setRecentPieces] = useState([]);
   const { mode: triggerMode, setMode: setTriggerMode } = useTriggerMode();
@@ -383,21 +411,53 @@ const HomeScreen = ({ navigation }) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const audioModes = config.AUDIO_MODES || [];
   const isGpsTenant = type === 'type2' || config.FRONTEND_MODE === 'gps';
+  const { data: mediaData } = useTenantMedia();
+  const sliderMonuments = Array.isArray(mediaData?.sliderManifest?.monuments)
+    ? mediaData.sliderManifest.monuments
+    : [];
+  const sliderManifestMap = useMemo(() => {
+    const map = {};
+    sliderMonuments.forEach((item) => {
+      if (item?.slug) {
+        map[item.slug] = item;
+      }
+    });
+    return map;
+  }, [sliderMonuments]);
+  const monumentsMedia = mediaData?.monuments || {};
+  const heroSlugsFromMedia = mediaData?.heroSlugs || [];
+
+  const fallbackMonuments = Array.isArray(config.GPS?.fallbackMonuments)
+    ? config.GPS.fallbackMonuments
+    : Object.values(config.GPS?.fallbackMonuments || {});
+  const coordinatesMap = useMemo(() => {
+    const map = {};
+    fallbackMonuments.forEach((monument) => {
+      if (monument?.id) {
+        map[monument.id] = monument;
+      }
+    });
+    return map;
+  }, [fallbackMonuments]);
 
   const heroSlides = useMemo(() => {
-    const desiredSlugs = Array.isArray(config.HERO_SLUGS)
+    const desiredSlugs = Array.isArray(config.HERO_SLUGS) && config.HERO_SLUGS.length
       ? config.HERO_SLUGS
-      : [];
+      : heroSlugsFromMedia;
     const slides = [];
 
-    const pushSlide = (slug, entry, index = 0) => {
-      const meta = sliderManifestMap[slug];
+    const pushSlide = (slug, entry, index = 0, metaOverride = null) => {
+      const meta = metaOverride || sliderManifestMap[slug] || monumentsMedia[slug];
       const title = meta?.title || entry?.title || slug;
       const subtitleParts = [meta?.city, meta?.country].filter(Boolean);
       const subtitle = subtitleParts.join(' · ');
+      const assetUri = entry?.assetUrl || entry?.url || entry?.originalUrl || null;
       const imageSource =
-        entry?.image ||
-        (entry?.url ? { uri: entry.url } : config.ASSETS?.heroBanner);
+        assetUri
+          ? { uri: assetUri }
+          : config.ASSETS?.heroBanner ||
+            config.ASSETS?.placeholderLarge ||
+            FALLBACK_PLACEHOLDER_LARGE;
 
       slides.push({
         key: `${slug}-${index}`,
@@ -410,15 +470,14 @@ const HomeScreen = ({ navigation }) => {
 
     desiredSlugs.forEach((slug) => {
       if (!slug) return;
-      const localEntries = Array.isArray(monumentImages[slug])
-        ? monumentImages[slug]
-        : [];
-      const fallbackEntries = Array.isArray(attributions[slug])
-        ? attributions[slug]
-        : [];
-      const source = localEntries.length ? localEntries : fallbackEntries;
-      if (source.length) {
-        source.slice(0, 2).forEach((entry, index) => pushSlide(slug, entry, index));
+      const mediaEntry = monumentsMedia[slug];
+      const availableImages = Array.isArray(mediaEntry?.images) && mediaEntry.images.length
+        ? mediaEntry.images
+        : buildManifestFallbackImages(sliderManifestMap[slug]);
+      if (availableImages.length) {
+        availableImages.slice(0, 2).forEach((entry, index) =>
+          pushSlide(slug, entry, index, sliderManifestMap[slug])
+        );
       }
     });
 
@@ -436,7 +495,92 @@ const HomeScreen = ({ navigation }) => {
     }
 
     return slides.length ? slides.slice(0, 6) : slides;
-  }, [config]);
+  }, [
+    config.ASSETS?.heroBanner,
+    config.ASSETS?.placeholderLarge,
+    config.HERO_SLUGS,
+    heroSlugsFromMedia,
+    monumentsMedia,
+    sliderManifestMap,
+  ]);
+  const homeIntro = config.HOME_INTRO_AUDIO;
+  const homeIntroAudioUrl = useMemo(() => {
+    if (!homeIntro?.pieceId || !tenantId) return null;
+    const mode = homeIntro.mode || 'normal';
+    const language = homeIntro.language || 'es';
+    try {
+      return getAudioFileUrl(tenantId, homeIntro.pieceId, mode, language);
+    } catch (error) {
+      console.warn('HomeScreen: Failed to build intro audio URL', error);
+      return null;
+    }
+  }, [homeIntro, tenantId]);
+  const homeIntroSoundRef = useRef(null);
+  const [isPlayingHomeIntro, setIsPlayingHomeIntro] = useState(false);
+  const [isLoadingHomeIntro, setIsLoadingHomeIntro] = useState(false);
+  useEffect(() => {
+    return () => {
+      if (homeIntroSoundRef.current) {
+        homeIntroSoundRef.current.unloadAsync().catch(() => {});
+        homeIntroSoundRef.current = null;
+      }
+    };
+  }, [homeIntroAudioUrl]);
+  const itinerarySectionTitle = config.ITINERARY_SECTION_TITLE || 'Itinerario Parque Europa';
+  const ensureHomeIntroSound = async () => {
+    if (homeIntroSoundRef.current) return homeIntroSoundRef.current;
+    if (!homeIntroAudioUrl) return null;
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: homeIntroAudioUrl },
+      { shouldPlay: false },
+    );
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.didJustFinish) {
+        setIsPlayingHomeIntro(false);
+        sound.setPositionAsync(0).catch(() => {});
+      }
+    });
+    homeIntroSoundRef.current = sound;
+    return sound;
+  };
+
+  const handleToggleHomeIntro = async () => {
+    if (Platform.OS === 'web') return;
+    if (!homeIntroAudioUrl) return;
+    setIsLoadingHomeIntro(true);
+    try {
+      const sound = await ensureHomeIntroSound();
+      if (!sound) return;
+      if (isPlayingHomeIntro) {
+        await sound.stopAsync();
+        await sound.setPositionAsync(0);
+        setIsPlayingHomeIntro(false);
+      } else {
+        await sound.replayAsync();
+        setIsPlayingHomeIntro(true);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo reproducir el audio de bienvenida.');
+    } finally {
+      setIsLoadingHomeIntro(false);
+    }
+  };
+
+  const handleItineraryPress = (stop) => {
+    if (!stop?.id) return;
+    const coordinatesEntry = coordinatesMap[stop.id];
+    navigation.navigate('ResultScreen', {
+      recognitionResult: {
+        pieceName: stop.id,
+        slug: stop.id,
+        title: stop.name,
+        userSelected: true,
+        triggeredBy: 'home-itinerary',
+        coordinates: coordinatesEntry?.coordinates,
+      },
+      audioMode: selectedMode,
+    });
+  };
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const heroAutoTimer = useRef(null);
 
@@ -581,7 +725,11 @@ const HomeScreen = ({ navigation }) => {
   const handleOpenPieceDetails = (piece) => {
     if (piece.pieceName && piece.imageUri) {
       navigation.navigate('ResultScreen', {
-        recognitionResult: { pieceName: piece.pieceName, confidence: piece.confidence },
+        recognitionResult: {
+          pieceName: piece.pieceName,
+          confidence: piece.confidence || null,
+          slug: piece.slug || null,
+        },
         imageUri: piece.imageUri,
         audioMode: selectedMode,
       });
@@ -656,6 +804,37 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {homeIntroAudioUrl ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{homeIntro?.title || 'Bienvenida sonora'}</Text>
+            {homeIntro?.description ? (
+              <Text style={styles.sectionDescription}>{homeIntro.description}</Text>
+            ) : null}
+            {Platform.OS === 'web' ? (
+              <View style={styles.homeIntroPlayer}>
+                <audio controls src={homeIntroAudioUrl} style={{ width: '100%' }} />
+              </View>
+            ) : (
+              <View style={styles.homeIntroPlayer}>
+                <TouchableOpacity
+                  style={styles.homeIntroButton}
+                  onPress={handleToggleHomeIntro}
+                  disabled={isLoadingHomeIntro}
+                >
+                  <Ionicons
+                    name={isPlayingHomeIntro ? 'pause-circle' : 'play-circle'}
+                    size={36}
+                    color={colors.PRIMARY || '#1F7A5C'}
+                  />
+                  <Text style={styles.homeIntroButtonText}>
+                    {isPlayingHomeIntro ? 'Detener' : 'Escuchar bienvenida'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ) : null}
+
         {isGpsTenant && (
           <View style={styles.statsRow}>
             {stats.map((stat) => (
@@ -712,7 +891,7 @@ const HomeScreen = ({ navigation }) => {
         {isGpsTenant && itineraryStops.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Itinerario Parque Europa</Text>
+              <Text style={styles.sectionTitle}>{itinerarySectionTitle}</Text>
               <TouchableOpacity
                 style={styles.sectionLink}
                 onPress={() => navigation.navigate('Mapa')}
@@ -730,7 +909,7 @@ const HomeScreen = ({ navigation }) => {
                 <TouchableOpacity
                   key={stop.id || stop.name || index}
                   style={styles.itineraryCard}
-                  onPress={() => navigation.navigate('Mapa')}
+                  onPress={() => handleItineraryPress(stop)}
                 >
                   <View style={styles.itineraryBadge}>
                     <Text style={styles.itineraryBadgeText}>

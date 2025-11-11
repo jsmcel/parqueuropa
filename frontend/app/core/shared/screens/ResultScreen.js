@@ -23,9 +23,7 @@ import AudioPlayer from '../components/AudioPlayer'; // Importar componente
 import { getAudioFileUrl } from '../services/apiService.js'; // Import the new service
 import { usePlayback } from '../context/PlaybackContext.js';
 import { responsiveStyles } from '../styles/responsiveStyles.js';
-import sliderManifest from '../../../config/slider.manifest.json';
-import attributions from '../../../assets/ATTRIBUTIONS.json';
-import monumentImages from '../../../assets/monuments/index.js';
+import { useTenantMedia } from '../context/TenantMediaContext.js';
 
 const resolveAssetUri = (source) => {
   if (!source) return null;
@@ -37,6 +35,29 @@ const resolveAssetUri = (source) => {
   }
   if (typeof source === 'object' && typeof source.uri === 'string') {
     return source.uri;
+  }
+  return null;
+};
+
+const getItemImageUri = (item) => {
+  if (!item) return null;
+  if (typeof item.assetUrl === 'string') {
+    return item.assetUrl;
+  }
+  if (typeof item.optimizedAssetUrl === 'string') {
+    return item.optimizedAssetUrl;
+  }
+  if (typeof item.originalAssetUrl === 'string') {
+    return item.originalAssetUrl;
+  }
+  if (typeof item.url === 'string') {
+    return item.url;
+  }
+  if (typeof item.originalUrl === 'string') {
+    return item.originalUrl;
+  }
+  if (item.image) {
+    return resolveAssetUri(item.image);
   }
   return null;
 };
@@ -101,10 +122,6 @@ const compressImageForHistory = async (imageUri) => {
 const { width } = Dimensions.get('window');
 const MAX_HISTORY_ITEMS = 15;
 const SLIDER_IMAGE_HEIGHT = Math.min(width * 0.6, 360);
-const sliderMonuments = Array.isArray(sliderManifest?.monuments)
-  ? sliderManifest.monuments
-  : [];
-
 const normalizeText = (value = '') =>
   value
     ?.toString()
@@ -127,6 +144,15 @@ const buildAliasMap = (monuments, extraAliases = {}) => {
     if (!monument?.slug) return;
     const { slug, title, city, aliases = [] } = monument;
     addAlias(slug, slug);
+    const slugWords = slug.replace(/[-_]+/g, ' ').trim();
+    addAlias(slugWords, slug);
+    const parts = slugWords.split(' ').filter(Boolean);
+    for (let i = parts.length - 1; i >= 1; i -= 1) {
+      const partial = parts.slice(0, i).join(' ');
+      if (partial.length >= 3) {
+        addAlias(partial, slug);
+      }
+    }
     addAlias(title, slug);
     addAlias(`${title || ''} ${city || ''}`.trim(), slug);
     aliases.forEach((alias) => addAlias(alias, slug));
@@ -158,6 +184,20 @@ const ResultScreen = ({ route, navigation }) => {
   const { pieceName, confidence, userSelected } = recognitionResult || {};
 
   const { config, type } = useTenant();
+  const { data: mediaData } = useTenantMedia();
+  const sliderMonuments = Array.isArray(mediaData?.sliderManifest?.monuments)
+    ? mediaData.sliderManifest.monuments
+    : [];
+  const sliderMonumentsMap = useMemo(() => {
+    const map = new Map();
+    sliderMonuments.forEach((monument) => {
+      if (monument?.slug) {
+        map.set(monument.slug, monument);
+      }
+    });
+    return map;
+  }, [sliderMonuments]);
+  const sliderMediaBySlug = mediaData?.monuments || {};
   const isGpsTenant = type === 'type2' || config?.FRONTEND_MODE === 'gps';
   const colors = config?.COLORS || {};
   const rawFonts = config?.FONTS || {};
@@ -188,11 +228,14 @@ const ResultScreen = ({ route, navigation }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const sliderAliasMap = useMemo(
     () => buildAliasMap(sliderMonuments, config?.SLIDER_ALIASES),
-    [config]
+    [sliderMonuments, config]
   );
   const sliderSlug = useMemo(() => {
     if (!sliderAliasMap || sliderAliasMap.size === 0) {
       return null;
+    }
+    if (recognitionResult?.slug && sliderMonumentsMap.has(recognitionResult.slug)) {
+      return recognitionResult.slug;
     }
     const candidates = [];
     if (pieceName) candidates.push(pieceName);
@@ -219,19 +262,19 @@ const ResultScreen = ({ route, navigation }) => {
   }, [pieceName, recognitionResult, config, sliderAliasMap]);
 
   const sliderMeta = useMemo(
-    () => sliderMonuments.find((item) => item.slug === sliderSlug) || null,
-    [sliderSlug]
+    () => (sliderSlug ? sliderMonumentsMap.get(sliderSlug) || null : null),
+    [sliderSlug, sliderMonumentsMap]
   );
 
   const sliderItems = useMemo(() => {
     if (!sliderSlug) return [];
 
-    if (Array.isArray(monumentImages?.[sliderSlug]) && monumentImages[sliderSlug].length) {
-      return monumentImages[sliderSlug];
-    }
+    const remoteEntries = Array.isArray(sliderMediaBySlug?.[sliderSlug]?.images)
+      ? sliderMediaBySlug[sliderSlug].images
+      : null;
 
-    if (Array.isArray(attributions?.[sliderSlug]) && attributions[sliderSlug].length) {
-      return attributions[sliderSlug];
+    if (remoteEntries && remoteEntries.length) {
+      return remoteEntries;
     }
 
     if (sliderMeta) {
@@ -239,33 +282,21 @@ const ResultScreen = ({ route, navigation }) => {
     }
 
     return [];
-  }, [sliderSlug, sliderMeta]);
+  }, [sliderSlug, sliderMediaBySlug, sliderMeta]);
 
   const sliderCurrentItem =
     sliderItems.length > 0 ? sliderItems[Math.min(activeSlide, sliderItems.length - 1)] : null;
-  const sliderImageUri = useMemo(
-    () => resolveAssetUri(sliderCurrentItem?.image),
-    [sliderCurrentItem]
-  );
   const primaryImageSource = useMemo(() => {
     if (displayImageUri) {
       return { uri: displayImageUri };
     }
-    if (sliderCurrentItem?.image) {
-      return sliderCurrentItem.image;
-    }
-    if (sliderCurrentItem?.url) {
-      return { uri: sliderCurrentItem.url };
-    }
-    return null;
+    const nextUri = getItemImageUri(sliderCurrentItem);
+    return nextUri ? { uri: nextUri } : null;
   }, [displayImageUri, sliderCurrentItem]);
   const historyImageUri = useMemo(() => {
     if (displayImageUri) return displayImageUri;
-    if (sliderImageUri) return sliderImageUri;
-    if (sliderCurrentItem?.localPath) return sliderCurrentItem.localPath;
-    if (sliderCurrentItem?.url) return sliderCurrentItem.url;
-    return null;
-  }, [displayImageUri, sliderImageUri, sliderCurrentItem]);
+    return getItemImageUri(sliderCurrentItem);
+  }, [displayImageUri, sliderCurrentItem]);
   const sliderListRef = useRef(null);
   const sliderViewabilityRef = useRef(({ viewableItems }) => {
     if (viewableItems?.length && typeof viewableItems[0].index === 'number') {
@@ -279,20 +310,28 @@ const ResultScreen = ({ route, navigation }) => {
   }, [sliderSlug, sliderItems.length]);
 
   useEffect(() => {
-    if (displayImageUri || sliderItems.length === 0) return;
-    const first = sliderItems[0];
-    if (!first) return;
-    if (first.image) {
-      const resolvedUri = resolveAssetUri(first.image);
-      if (resolvedUri) {
-        setDisplayImageUri(resolvedUri);
-        return;
-      }
+    if (routeImageUri) {
+      setDisplayImageUri(routeImageUri);
+      return;
     }
-    if (first.url) {
-      setDisplayImageUri(first.url);
+    if (!sliderSlug) {
+      setDisplayImageUri(null);
+      return;
     }
-  }, [displayImageUri, sliderItems]);
+    if (sliderItems.length === 0) return;
+    const fallbackUri = getItemImageUri(sliderItems[0]);
+    if (fallbackUri) {
+      setDisplayImageUri(fallbackUri);
+    }
+  }, [routeImageUri, sliderSlug, sliderItems]);
+
+  useEffect(() => {
+    if (routeImageUri) return;
+    const nextUri = getItemImageUri(sliderCurrentItem);
+    if (nextUri && nextUri !== displayImageUri) {
+      setDisplayImageUri(nextUri);
+    }
+  }, [routeImageUri, sliderCurrentItem, displayImageUri]);
 
   // Ref para el AudioPlayer
   const audioPlayerRef = useRef(null);
@@ -384,7 +423,8 @@ const ResultScreen = ({ route, navigation }) => {
           }
           
           const newEntry = {
-            pieceName: pieceName,
+            pieceName,
+            slug: sliderSlug || recognitionResult?.slug || null,
             imageUri: imageForHistory,
             timestamp: Date.now(),
           };
@@ -677,7 +717,9 @@ const ResultScreen = ({ route, navigation }) => {
               showsHorizontalScrollIndicator={false}
               style={styles.sliderList}
               renderItem={({ item }) => {
-                const imageSource = item.image || (item.url ? { uri: item.url } : null);
+                const resolvedUri = getItemImageUri(item);
+                const imageSource =
+                  resolvedUri ? { uri: resolvedUri } : item.image || null;
                 return (
                   <View style={styles.sliderImageWrapper}>
                     <View style={styles.sliderImageFrame}>
