@@ -128,11 +128,17 @@ async function updateSessionSummary(sessionId, updates = {}, options = {}) {
   try {
     if (!sessionId) return;
     const tenantId = options.tenantId || updates.tenantId || 'global';
-    let sessionData = await SessionSummary.findOne({ tenantId, sessionId });
+    const scopedSessionId =
+      sessionId && sessionId.includes(':')
+        ? sessionId
+        : tenantId
+        ? `${tenantId}:${sessionId}`
+        : sessionId;
+    let sessionData = await SessionSummary.findOne({ tenantId, sessionId: scopedSessionId });
     
     if (!sessionData) {
       sessionData = await SessionSummary.findOne({
-        sessionId,
+        sessionId: scopedSessionId,
         $or: [
           { tenantId: { $exists: false } },
           { tenantId: null },
@@ -176,7 +182,7 @@ async function updateSessionSummary(sessionId, updates = {}, options = {}) {
       // Create new session
       const newSession = new SessionSummary({
         tenantId,
-        sessionId,
+        sessionId: scopedSessionId,
         firstSeen: new Date(),
         lastSeen: new Date(),
         totalRecognitions: updates.totalRecognitions || 0,
