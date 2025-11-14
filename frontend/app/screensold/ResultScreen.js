@@ -16,16 +16,36 @@ import { Button, Divider } from 'react-native-elements'; // Card ya no es necesa
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Para leer preferencias
 import config from '../config';
 import AudioPlayer from '../components/AudioPlayer'; // <-- Importar componente
+import { useProgress } from '../core/shared/context/ProgressContext.js';
 
 const { width } = Dimensions.get('window');
 
+const slugifyForHashtag = (value = '') =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '');
+
+const buildShareCopy = (cfg) => {
+  const target = cfg?.PARK_INFO?.name || cfg?.APP_NAME || 'esta ruta';
+  const fallbackSlug = slugifyForHashtag(target);
+  const fallbackHashtag = fallbackSlug ? `#${fallbackSlug}` : '#Audioguia';
+  return {
+    target,
+    hashtag: cfg?.SHARE_HASHTAG || fallbackHashtag,
+  };
+};
+
 // Placeholder para imagen grande (necesitas crear esta imagen en assets)
 const placeholderLarge = require('../assets/placeholder_large.png');
+
+const legacyShareCopy = buildShareCopy(config);
 
 const ResultScreen = ({ route, navigation }) => {
   // --- Estados Simplificados ---
   const { recognitionResult, imageUri: routeImageUri, audioMode: initialAudioMode } = route.params || {};
   const { pieceName, confidence } = recognitionResult || {};
+  const { markStopVisited } = useProgress();
 
   // Estado para manejar URI local vs remota
   const [displayImageUri, setDisplayImageUri] = useState(null);
@@ -109,12 +129,18 @@ const ResultScreen = ({ route, navigation }) => {
   }, []);
 
 
+  const handlePlaybackComplete = useCallback(() => {
+    if (pieceName) {
+      markStopVisited(pieceName);
+    }
+  }, [pieceName, markStopVisited]);
+
   // --- Compartir (sin cambios) ---
   const handleShare = async () => {
     if (!pieceName) return;
     try {
       await Share.share({
-        message: `Estoy recorriendo el Parque Europa y la parada "${pieceName}" con la audioguía. ¡Te va a encantar! #ParqueEuropa`,
+        message: `Estoy recorriendo ${legacyShareCopy.target} y la parada "${pieceName}" con la audioguia. Te va a encantar! ${legacyShareCopy.hashtag}`,
         title: `Parada: ${pieceName}`
       });
     } catch (error) {
@@ -224,6 +250,7 @@ const ResultScreen = ({ route, navigation }) => {
                 audioUrl={audioUrl}
                 autoPlay={autoPlayPref} // Usar preferencia
                 onError={handleAudioError} // Pasar callback de error
+                onPlaybackComplete={handlePlaybackComplete}
                 // onPlaybackStatusUpdateProp={status => console.log(status)} // Opcional para debug
               />
           ) : (

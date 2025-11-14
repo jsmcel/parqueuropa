@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "defaultTriggerRadiusMeters": 35,
+    "itineraryLengthKm": 1.4,
+    "itineraryDurationMinutes": 85,
+    "totalStops": 8
+  },
+  "monuments": {
+    "plaza-mayor-bembibre": {
+      "id": "plaza-mayor-bembibre",
+      "name": "Plaza Mayor y Casa Consistorial",
+      "category": "casco_historico",
+      "summary": "Plaza Mayor irregular con ayuntamiento contemporaneo y la Casa del Peso, epicentro social desde el siglo XV.",
+      "story": "Los soportales comerciales, el consistorio de Veremundo Nunez y el antiguo peso mercantil recuerdan el casco abierto mas alla de las murallas y conectan con los pasadizos hacia La Villavieja.",
+      "itineraryOrder": 3,
+      "coordinates": {
+        "latitude": 42.6150785596895,
+        "longitude": -6.41661975179649
+      }
+    },
+    "iglesia-san-pedro-bembibre": {
+      "id": "iglesia-san-pedro-bembibre",
+      "name": "Iglesia de San Pedro Apostol",
+      "category": "casco_historico",
+      "summary": "Templo levantado sobre la antigua sinagoga judia, con portada romanica, espadana de 1740 y memoria del incendio de 1934.",
+      "story": "Sirvio como cuartel del mariscal Ney, sufrio la devastacion revolucionaria y conservo al Cristo Rojo, simbolo de la convivencia entre la aljama y la devocion berciana.",
+      "itineraryOrder": 4,
+      "coordinates": {
+        "latitude": 42.61511145277598,
+        "longitude": -6.416435168239424
+      }
+    },
+    "edificio-villarejo-bembibre": {
+      "id": "edificio-villarejo-bembibre",
+      "name": "Edificio Villarejo",
+      "category": "casco_historico",
+      "summary": "Casa comercial de 1919 con miradores sobre cariatides y la historica ferreteria Villarejo en planta baja.",
+      "story": "Encargada por la familia Villarejo al arquitecto Javier Ontanon, su fachada de tres alturas luce miradores apoyados en figuras femeninas, volutas barrocas y una alegoria marina en lo alto. La ferreteria familiar, abierta en 1900 y cerrada en 2024 tras mas de 120 anos de servicio, convirtio este edificio en referente del comercio bembibrense.",
+      "itineraryOrder": 5,
+      "coordinates": {
+        "latitude": 42.615148,
+        "longitude": -6.416188
+      }
+    },
+    "ruta-modernista-bembibre": {
+      "id": "ruta-modernista-bembibre",
+      "name": "Ruta Modernista de la Avenida Susana Gonzalez",
+      "category": "casco_historico",
+      "summary": "El ensanche burgues de 1900 muestra miradores, forjas y fachadas modernistas financiadas por la bonanza minera.",
+      "story": "Tras dedicar una parada al edificio Villarejo, seguimos por la avenida Susana Gonzalez para fijarnos en los miradores metalicos, las herrerias y los juegos neomudejares de casas como la de Higinio Gonzalez o la de Eloy Reigada, escaparate del \"buen vivir\" minero.",
+      "itineraryOrder": 6,
+      "coordinates": {
+        "latitude": 42.614100008648485,
+        "longitude": -6.417860356393775
+      }
+    },
+    "villavieja-castillo-bembibre": {
+      "id": "villavieja-castillo-bembibre",
+      "name": "Barrio de La Villavieja y casa fuerte",
+      "category": "casco_historico",
+      "summary": "Nucleo medieval con restos del castillo senorial y vistas sobre los linares del Boeza.",
+      "story": "Las calles empinadas conducen a los cimientos descritos por Gil y Carrasco y al mirador que explica la prosperidad agricola tras el fuero concedido por Alfonso IX.",
+      "itineraryOrder": 7,
+      "coordinates": {
+        "latitude": 42.61456336398077,
+        "longitude": -6.414870447981821
+      }
+    },
+    "santuario-ecce-homo-bembibre": {
+      "id": "santuario-ecce-homo-bembibre",
+      "name": "Santuario del Ecce Homo",
+      "category": "miradores",
+      "summary": "Templo barroco-neoclasico del patron del Bierzo Alto con torre de 1808 y la talla del Santo Ecce Homo.",
+      "story": "Reconstruido despues de 1809, alberga la imagen del Cristo atado a la columna que inspira la romeria y marca el cierre del via crucis local.",
+      "itineraryOrder": 8,
+      "coordinates": {
+        "latitude": 42.61451248300837,
+        "longitude": -6.409817477674318
+      }
+    },
+    "casa-de-las-culturas-bembibre": {
+      "id": "casa-de-las-culturas-bembibre",
+      "name": "Casa de las Culturas",
+      "category": "museos",
+      "summary": "Centro cultural inaugurado en 2008 con biblioteca, telecentro y salas expositivas.",
+      "story": "El edificio de Roberto Asensio combina pizarra, caliza y un gran lucernario para alojar talleres, turismo y la agenda cultural de Bembibre.",
+      "itineraryOrder": 1,
+      "coordinates": {
+        "latitude": 42.61792155396903,
+        "longitude": -6.4160082355574675
+      }
+    },
+    "museo-alto-bierzo-bembibre": {
+      "id": "museo-alto-bierzo-bembibre",
+      "name": "Museo Alto Bierzo",
+      "category": "museos",
+      "summary": "Museo municipal que resume la historia del Bierzo Alto con colecciones arqueologicas y etnograficas.",
+      "story": "Reune armas del Bronce Final, aras dedicadas a Cossus y recreaciones de oficios, aulas y hogares bercianos a modo de puente entre los origenes de la villa y las paradas siguientes en la Plaza Mayor.",
+      "itineraryOrder": 2,
+      "coordinates": {
+        "latitude": 42.61800822947965,
+        "longitude": -6.4159559851856764
+      }
+    }
+  }
+}

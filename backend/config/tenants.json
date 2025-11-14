@@ -30,5 +30,15 @@
     "enabled": true,
     "description": "Ruta urbana y patrimonial de Bembibre en el Bierzo Alto",
     "frontendMode": "gps"
+  },
+  "albares_ribera": {
+    "name": "Albares de la Ribera",
+    "subdomains": [
+      "albares",
+      "albaresribera"
+    ],
+    "enabled": true,
+    "description": "Itinerario histórico y paisajístico por el valle del Boeza",
+    "frontendMode": "gps"
   }
 }

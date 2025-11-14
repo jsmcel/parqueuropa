@@ -1,0 +1,65 @@
+{
+  "monuments": [
+    {
+      "slug": "plaza-mayor-bembibre",
+      "title": "Plaza Mayor y Casa Consistorial",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "iglesia-san-pedro-bembibre",
+      "title": "Iglesia de San Pedro",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "ruta-modernista-bembibre",
+      "title": "Ruta Modernista",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "villavieja-castillo-bembibre",
+      "title": "La Villavieja y casa fuerte",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "edificio-villarejo-bembibre",
+      "title": "Edificio Villarejo",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "santuario-ecce-homo-bembibre",
+      "title": "Santuario del Ecce Homo",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "casa-de-las-culturas-bembibre",
+      "title": "Casa de las Culturas",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    },
+    {
+      "slug": "museo-alto-bierzo-bembibre",
+      "title": "Museo Alto Bierzo",
+      "city": "Bembibre",
+      "country": "Espa?a",
+      "wikimedia_files": []
+    }
+  ],
+  "hero_slugs": [
+    "plaza-mayor-bembibre",
+    "ruta-modernista-bembibre",
+    "santuario-ecce-homo-bembibre"
+  ]
+}

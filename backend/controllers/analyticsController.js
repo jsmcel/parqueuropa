@@ -16,7 +16,9 @@ const {
  */
 async function trackRecognition(data) {
   try {
+    const tenantId = data.tenantId || 'global';
     const recognitionEvent = new RecognitionEvent({
+      tenantId,
       pieceName: data.pieceName,
       confidence: data.confidence,
       success: data.success,
@@ -33,11 +35,15 @@ async function trackRecognition(data) {
     await recognitionEvent.save();
     
     // Update session summary
-    await updateSessionSummary(data.sessionId, {
-      totalRecognitions: 1,
-      successfulRecognitions: data.success ? 1 : 0,
-      uniquePiecesViewed: data.pieceName ? [data.pieceName] : []
-    });
+    await updateSessionSummary(
+      data.sessionId,
+      {
+        totalRecognitions: 1,
+        successfulRecognitions: data.success ? 1 : 0,
+        uniquePiecesViewed: data.pieceName ? [data.pieceName] : []
+      },
+      { tenantId, ip: data.ip, userAgent: data.userAgent }
+    );
 
     return recognitionEvent;
   } catch (error) {
@@ -51,7 +57,9 @@ async function trackRecognition(data) {
  */
 async function trackAudio(data) {
   try {
+    const tenantId = data.tenantId || 'global';
     const audioEvent = new AudioEvent({
+      tenantId,
       pieceId: data.pieceId,
       audioMode: data.audioMode,
       success: data.success,
@@ -63,9 +71,13 @@ async function trackAudio(data) {
     await audioEvent.save();
     
     // Update session summary
-    await updateSessionSummary(data.sessionId, {
-      totalAudioPlays: 1
-    });
+    await updateSessionSummary(
+      data.sessionId,
+      {
+        totalAudioPlays: 1
+      },
+      { tenantId, ip: data.ip, userAgent: data.userAgent }
+    );
 
     return audioEvent;
   } catch (error) {
@@ -79,7 +91,9 @@ async function trackAudio(data) {
  */
 async function saveFeedback(data) {
   try {
+    const tenantId = data.tenantId || 'global';
     const feedback = new UserFeedback({
+      tenantId,
       rating: data.rating,
       comment: data.comment || '',
       appVersion: data.appVersion,
@@ -92,9 +106,13 @@ async function saveFeedback(data) {
     await feedback.save();
     
     // Update session summary
-    await updateSessionSummary(data.sessionId, {
-      feedbackGiven: true
-    });
+    await updateSessionSummary(
+      data.sessionId,
+      {
+        feedbackGiven: true
+      },
+      { tenantId, ip: data.ip, userAgent: data.userAgent }
+    );
 
     return feedback;
   } catch (error) {
@@ -106,9 +124,25 @@ async function saveFeedback(data) {
 /**
  * Update session summary (upsert)
  */
-async function updateSessionSummary(sessionId, updates) {
+async function updateSessionSummary(sessionId, updates = {}, options = {}) {
   try {
-    const sessionData = await SessionSummary.findOne({ sessionId });
+    if (!sessionId) return;
+    const tenantId = options.tenantId || updates.tenantId || 'global';
+    let sessionData = await SessionSummary.findOne({ tenantId, sessionId });
+    
+    if (!sessionData) {
+      sessionData = await SessionSummary.findOne({
+        sessionId,
+        $or: [
+          { tenantId: { $exists: false } },
+          { tenantId: null },
+          { tenantId: '' }
+        ]
+      });
+      if (sessionData) {
+        sessionData.tenantId = tenantId;
+      }
+    }
     
     if (sessionData) {
       // Update existing session
@@ -116,6 +150,14 @@ async function updateSessionSummary(sessionId, updates) {
       sessionData.totalRecognitions += updates.totalRecognitions || 0;
       sessionData.successfulRecognitions += updates.successfulRecognitions || 0;
       sessionData.totalAudioPlays += updates.totalAudioPlays || 0;
+      sessionData.tenantId = tenantId;
+      
+      if (options.ip) {
+        sessionData.ip = options.ip;
+      }
+      if (options.userAgent) {
+        sessionData.userAgent = options.userAgent;
+      }
       
       if (updates.uniquePiecesViewed && updates.uniquePiecesViewed.length > 0) {
         updates.uniquePiecesViewed.forEach(piece => {
@@ -133,6 +175,7 @@ async function updateSessionSummary(sessionId, updates) {
     } else {
       // Create new session
       const newSession = new SessionSummary({
+        tenantId,
         sessionId,
         firstSeen: new Date(),
         lastSeen: new Date(),
@@ -141,8 +184,8 @@ async function updateSessionSummary(sessionId, updates) {
         totalAudioPlays: updates.totalAudioPlays || 0,
         uniquePiecesViewed: updates.uniquePiecesViewed || [],
         feedbackGiven: updates.feedbackGiven || false,
-        ip: updates.ip,
-        userAgent: updates.userAgent
+        ip: options.ip || updates.ip,
+        userAgent: options.userAgent || updates.userAgent
       });
       
       await newSession.save();
@@ -155,9 +198,17 @@ async function updateSessionSummary(sessionId, updates) {
 /**
  * Get general statistics summary
  */
-async function getStatsSummary(period = '7d') {
+async function getStatsSummary(period = '7d', tenantId = 'all') {
   try {
     const dateFilter = getDateFilter(period);
+    const tenantFilter = buildTenantCriteria(tenantId);
+    const recognitionMatch = { ...dateFilter, ...tenantFilter };
+    const audioMatch = { ...dateFilter, ...tenantFilter };
+    const feedbackMatch = { ...dateFilter, ...tenantFilter };
+    const sessionFilter = { ...tenantFilter };
+    if (dateFilter.timestamp) {
+      sessionFilter.lastSeen = dateFilter.timestamp;
+    }
     
     const [
       totalRecognitions,
@@ -167,13 +218,13 @@ async function getStatsSummary(period = '7d') {
       totalFeedback,
       avgRating
     ] = await Promise.all([
-      RecognitionEvent.countDocuments(dateFilter),
-      RecognitionEvent.countDocuments({ ...dateFilter, success: true }),
-      AudioEvent.countDocuments(dateFilter),
-      SessionSummary.countDocuments(dateFilter),
-      UserFeedback.countDocuments(dateFilter),
+      RecognitionEvent.countDocuments(recognitionMatch),
+      RecognitionEvent.countDocuments({ ...recognitionMatch, success: true }),
+      AudioEvent.countDocuments(audioMatch),
+      SessionSummary.countDocuments(sessionFilter),
+      UserFeedback.countDocuments(feedbackMatch),
       UserFeedback.aggregate([
-        { $match: dateFilter },
+        { $match: feedbackMatch },
         { $group: { _id: null, avgRating: { $avg: '$rating' } } }
       ])
     ]);
@@ -183,6 +234,7 @@ async function getStatsSummary(period = '7d') {
 
     return {
       period,
+      tenant: tenantId,
       totalRecognitions,
       successfulRecognitions,
       successRate: Math.round(successRate * 100) / 100,
@@ -200,9 +252,16 @@ async function getStatsSummary(period = '7d') {
 /**
  * Get recognition statistics
  */
-async function getRecognitionStats(period = '7d') {
+async function getRecognitionStats(period = '7d', tenantId = 'all') {
   try {
     const dateFilter = getDateFilter(period);
+    const tenantFilter = buildTenantCriteria(tenantId);
+    const matchFilter = { ...dateFilter, ...tenantFilter };
+    const successMatch = { ...matchFilter, success: true };
+    const namedSuccessMatch = { 
+      ...successMatch, 
+      pieceName: { $exists: true, $ne: null } 
+    };
     
     const [
       totalRecognitions,
@@ -211,29 +270,30 @@ async function getRecognitionStats(period = '7d') {
       topPieces,
       fallbackUsage
     ] = await Promise.all([
-      RecognitionEvent.countDocuments(dateFilter),
+      RecognitionEvent.countDocuments(matchFilter),
       RecognitionEvent.aggregate([
-        { $match: dateFilter },
+        { $match: matchFilter },
         { $group: { _id: null, successRate: { $avg: { $cond: ['$success', 1, 0] } } } }
       ]),
       RecognitionEvent.aggregate([
-        { $match: { ...dateFilter, success: true } },
+        { $match: successMatch },
         { $group: { _id: null, avgConfidence: { $avg: '$confidence' } } }
       ]),
       RecognitionEvent.aggregate([
-        { $match: { ...dateFilter, success: true, pieceName: { $exists: true, $ne: null } } },
+        { $match: namedSuccessMatch },
         { $group: { _id: '$pieceName', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 }
       ]),
       RecognitionEvent.aggregate([
-        { $match: dateFilter },
+        { $match: matchFilter },
         { $group: { _id: '$fallbackUsed', count: { $sum: 1 } } }
       ])
     ]);
 
     return {
       period,
+      tenant: tenantId,
       totalRecognitions,
       successRate: successRate.length > 0 ? Math.round(successRate[0].successRate * 10000) / 100 : 0,
       averageConfidence: avgConfidence.length > 0 ? Math.round(avgConfidence[0].avgConfidence * 1000) / 1000 : 0,
@@ -249,23 +309,25 @@ async function getRecognitionStats(period = '7d') {
 /**
  * Get audio statistics
  */
-async function getAudioStats(period = '7d') {
+async function getAudioStats(period = '7d', tenantId = 'all') {
   try {
     const dateFilter = getDateFilter(period);
+    const tenantFilter = buildTenantCriteria(tenantId);
+    const matchFilter = { ...dateFilter, ...tenantFilter };
     
     const [
       totalAudioPlays,
       modeDistribution,
       topPieces
     ] = await Promise.all([
-      AudioEvent.countDocuments(dateFilter),
+      AudioEvent.countDocuments(matchFilter),
       AudioEvent.aggregate([
-        { $match: dateFilter },
+        { $match: matchFilter },
         { $group: { _id: '$audioMode', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]),
       AudioEvent.aggregate([
-        { $match: dateFilter },
+        { $match: matchFilter },
         { $group: { _id: '$pieceId', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 }
@@ -274,6 +336,7 @@ async function getAudioStats(period = '7d') {
 
     return {
       period,
+      tenant: tenantId,
       totalAudioPlays,
       modeDistribution,
       topPieces
@@ -287,12 +350,19 @@ async function getAudioStats(period = '7d') {
 /**
  * Get popular pieces ranking
  */
-async function getPopularPieces(period = '7d', limit = 20) {
+async function getPopularPieces(period = '7d', limit = 20, tenantId = 'all') {
   try {
     const dateFilter = getDateFilter(period);
+    const tenantFilter = buildTenantCriteria(tenantId);
+    const matchFilter = { 
+      ...dateFilter, 
+      ...tenantFilter, 
+      success: true, 
+      pieceName: { $exists: true, $ne: null } 
+    };
     
     const popularPieces = await RecognitionEvent.aggregate([
-      { $match: { ...dateFilter, success: true, pieceName: { $exists: true, $ne: null } } },
+      { $match: matchFilter },
       { $group: { 
         _id: '$pieceName', 
         count: { $sum: 1 },
@@ -304,6 +374,7 @@ async function getPopularPieces(period = '7d', limit = 20) {
 
     return {
       period,
+      tenant: tenantId,
       popularPieces
     };
   } catch (error) {
@@ -315,13 +386,15 @@ async function getPopularPieces(period = '7d', limit = 20) {
 /**
  * Get timeline data for charts
  */
-async function getTimeline(period = '7d', granularity = 'day') {
+async function getTimeline(period = '7d', granularity = 'day', tenantId = 'all') {
   try {
     const dateFilter = getDateFilter(period);
+    const tenantFilter = buildTenantCriteria(tenantId);
+    const matchFilter = { ...dateFilter, ...tenantFilter };
     const groupFormat = getGroupFormat(granularity);
     
     const timeline = await RecognitionEvent.aggregate([
-      { $match: dateFilter },
+      { $match: matchFilter },
       {
         $group: {
           _id: {
@@ -336,6 +409,7 @@ async function getTimeline(period = '7d', granularity = 'day') {
 
     return {
       period,
+      tenant: tenantId,
       granularity,
       timeline
     };
@@ -350,7 +424,8 @@ async function getTimeline(period = '7d', granularity = 'day') {
  */
 async function getFeedbackList(filters = {}) {
   try {
-    const query = {};
+    const tenantFilter = buildTenantCriteria(filters.tenantId);
+    const query = { ...tenantFilter };
     
     if (filters.minRating) {
       query.rating = { $gte: parseInt(filters.minRating) };
@@ -395,7 +470,7 @@ async function getFeedbackList(filters = {}) {
 /**
  * Get complete dashboard data
  */
-async function getDashboardData(period = '7d') {
+async function getDashboardData(period = '7d', tenantId = 'all') {
   try {
     const [
       summary,
@@ -405,12 +480,12 @@ async function getDashboardData(period = '7d') {
       timeline,
       recentFeedback
     ] = await Promise.all([
-      getStatsSummary(period),
-      getRecognitionStats(period),
-      getAudioStats(period),
-      getPopularPieces(period, 10),
-      getTimeline(period, 'day'),
-      getFeedbackList({ limit: 10 })
+      getStatsSummary(period, tenantId),
+      getRecognitionStats(period, tenantId),
+      getAudioStats(period, tenantId),
+      getPopularPieces(period, 10, tenantId),
+      getTimeline(period, 'day', tenantId),
+      getFeedbackList({ limit: 10, tenantId })
     ]);
 
     return {
@@ -452,6 +527,27 @@ function getDateFilter(period) {
   }
 
   return { timestamp: { $gte: startDate } };
+}
+
+/**
+ * Helper function to build tenant filter
+ */
+function buildTenantCriteria(tenantId) {
+  if (!tenantId || tenantId === 'all' || tenantId === '*' || tenantId === 'any') {
+    return {};
+  }
+
+  if (tenantId === 'unassigned') {
+    return {
+      $or: [
+        { tenantId: { $exists: false } },
+        { tenantId: null },
+        { tenantId: '' }
+      ]
+    };
+  }
+
+  return { tenantId };
 }
 
 /**

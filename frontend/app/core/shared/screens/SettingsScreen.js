@@ -27,6 +27,13 @@ import { sendFeedback } from '../services/apiService.js';
 const SettingsScreen = () => {
   const { config } = useTenant();
   const styles = useMemo(() => createStyles(config), [config]);
+  const metaTexts = useMemo(() => {
+    const placeName = config?.PARK_INFO?.name || config?.APP_NAME || 'este recorrido';
+    const manager = config?.PARK_INFO?.managingEntity || 'sus gestores oficiales';
+    const referenceName = config?.APP_NAME || placeName || 'Audioguia';
+    const footerText = `© ${new Date().getFullYear()} ${referenceName}`;
+    return { placeName, manager, footerText };
+  }, [config]);
   // State for settings that remain
   const [autoPlayAudio, setAutoPlayAudio] = useState(true);
   const [cacheSize, setCacheSize] = useState('Calculando...');
@@ -419,10 +426,10 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>Descargo de Responsabilidad</Text>
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerText}>
-              Esta aplicación no es oficial del Parque Europa ni está afiliada, patrocinada o respaldada por el Ayuntamiento de Torrejón de Ardoz.
+              {`Esta aplicacion no es oficial de ${metaTexts.placeName} ni esta afiliada, patrocinada o respaldada por ${metaTexts.manager}.`}
             </Text>
             <Text style={styles.disclaimerText}>
-              La información que ofrece tiene fines educativos y recreativos. Para horarios, normas y servicios oficiales del parque visita sus canales oficiales.
+              La informacion ofrecida tiene fines educativos y recreativos. Para horarios, normas y servicios oficiales consulta los canales del destino.
             </Text>
           </View>
         </View>
@@ -446,7 +453,7 @@ const SettingsScreen = () => {
 
         {/* Pie de página */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2025 Parque Europa Audio Tour</Text>
+          <Text style={styles.footerText}>{metaTexts.footerText}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

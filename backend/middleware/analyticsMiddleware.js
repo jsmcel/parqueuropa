@@ -78,7 +78,9 @@ function analyticsMiddleware(req, res, next) {
  */
 async function trackApiEvent(req, res, responseTime, sessionId, ip, userAgent) {
   try {
+    const tenantId = resolveTenantId(req);
     const apiEvent = new ApiEvent({
+      tenantId,
       endpoint: req.path,
       method: req.method,
       statusCode: res.statusCode,
@@ -94,6 +96,22 @@ async function trackApiEvent(req, res, responseTime, sessionId, ip, userAgent) {
     // Don't throw errors in tracking - it shouldn't affect the main app
     console.error('Failed to save API event:', error);
   }
+}
+
+function resolveTenantId(req) {
+  if (!req) return 'global';
+  if (req.tenant && req.tenant.id) {
+    return req.tenant.id;
+  }
+  if (req.headers && req.headers['x-tenant-id']) {
+    return req.headers['x-tenant-id'];
+  }
+  if (req.query) {
+    if (req.query.tenantId) return req.query.tenantId;
+    if (req.query.tenant_id) return req.query.tenant_id;
+    if (req.query.tenant) return req.query.tenant;
+  }
+  return 'global';
 }
 
 module.exports = analyticsMiddleware;

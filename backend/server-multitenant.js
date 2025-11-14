@@ -758,6 +758,7 @@ app.post('/api/recognize', [
     }
 
     const { image } = req.body;
+    const recognitionStart = Date.now();
     const tenantId = req.tenant.id;
     
     logger.info(`Procesando reconocimiento para tenant: ${tenantId}`);
@@ -792,14 +793,41 @@ app.post('/api/recognize', [
     // Guardar en cache
     imageCache.set(imageHash, result);
     
-    // Tracking de analytics
-    if (result.bestMatch) {
-      trackRecognition(req, {
-        pieceName: result.bestMatch.pieceName,
+    const recognitionDuration = Date.now() - recognitionStart;
+    const bestMatchName = result.bestMatch ? result.bestMatch.pieceName : null;
+    const normalizedName = (bestMatchName || '').toLowerCase();
+    const isLowConfidence = typeof result.lowConfidence === 'boolean'
+      ? result.lowConfidence
+      : typeof result.confidence === 'number' && result.confidence < 0.6;
+
+    const suggestions = Array.isArray(result.suggestions)
+      ? result.suggestions.map((suggestion) => ({
+          pieceName:
+            suggestion.pieceName ||
+            suggestion.title ||
+            suggestion.slug ||
+            suggestion.name ||
+            suggestion.id ||
+            null,
+          confidence: suggestion.confidence ?? suggestion.score ?? suggestion.similarity ?? null,
+        }))
+      : [];
+
+    setImmediate(() => {
+      trackRecognition({
+        pieceName: bestMatchName,
         confidence: result.confidence,
-        tenant: tenantId
-      });
-    }
+        success: Boolean(bestMatchName),
+        lowConfidence: isLowConfidence,
+        notATrain: normalizedName === 'otros',
+        suggestions,
+        fallbackUsed: result.fallbackUsed || 'none',
+        responseTime: recognitionDuration,
+        sessionId: req.analyticsSessionId || 'unknown',
+        ip: req.ip || req.connection?.remoteAddress || 'unknown',
+        tenantId,
+      }).catch((err) => logger.warn({ err }, 'Error tracking recognition event'));
+    });
 
     res.json({
       pieceName: result.bestMatch ? result.bestMatch.pieceName : 'Desconocido',
@@ -847,7 +875,7 @@ app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
           success: false,
           sessionId: req.analyticsSessionId,
           ip: req.ip,
-          tenant: tenantId,
+          tenantId,
         }).catch((err) => logger.warn({ err }, 'Error tracking failed audio event'));
       });
 
@@ -867,7 +895,7 @@ app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
         success: true,
         sessionId: req.analyticsSessionId,
         ip: req.ip,
-        tenant: tenantId,
+        tenantId,
       }).catch((err) => logger.warn({ err }, 'Error tracking audio event'));
     });
 
@@ -886,7 +914,7 @@ app.get('/api/audio/:tenantId/:pieceId/:mode/:language?', async (req, res) => {
 // ========================================
 // RUTAS DE ANALYTICS
 // ========================================
-app.use('/api/analytics', analyticsRoutes);
+app.use(analyticsRoutes);
 
 // ========================================
 // RUTA DE FALLBACK

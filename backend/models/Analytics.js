@@ -10,6 +10,7 @@ const Schema = mongoose.Schema;
 // API Event Schema - General API tracking
 // ============================================
 const ApiEventSchema = new Schema({
+  tenantId: { type: String, index: true, default: 'global' },
   endpoint: { type: String, required: true, index: true },
   method: { type: String, required: true }, // GET, POST, etc.
   statusCode: { type: Number, required: true },
@@ -26,11 +27,13 @@ const ApiEventSchema = new Schema({
 // Indexes for common queries
 ApiEventSchema.index({ timestamp: -1 });
 ApiEventSchema.index({ endpoint: 1, timestamp: -1 });
+ApiEventSchema.index({ tenantId: 1, timestamp: -1 });
 
 // ============================================
 // Recognition Event Schema - Image recognition tracking
 // ============================================
 const RecognitionEventSchema = new Schema({
+  tenantId: { type: String, index: true, default: 'global' },
   pieceName: { type: String, index: true }, // Recognized piece name
   confidence: { type: Number }, // Confidence score (0-1)
   success: { type: Boolean, required: true, index: true }, // Was recognition successful?
@@ -54,11 +57,13 @@ const RecognitionEventSchema = new Schema({
 RecognitionEventSchema.index({ pieceName: 1, timestamp: -1 });
 RecognitionEventSchema.index({ success: 1, timestamp: -1 });
 RecognitionEventSchema.index({ timestamp: -1 });
+RecognitionEventSchema.index({ tenantId: 1, timestamp: -1 });
 
 // ============================================
 // Audio Event Schema - Audio playback tracking
 // ============================================
 const AudioEventSchema = new Schema({
+  tenantId: { type: String, index: true, default: 'global' },
   pieceId: { type: String, required: true, index: true }, // Piece identifier
   audioMode: { 
     type: String, 
@@ -79,11 +84,13 @@ const AudioEventSchema = new Schema({
 AudioEventSchema.index({ pieceId: 1, audioMode: 1, timestamp: -1 });
 AudioEventSchema.index({ audioMode: 1, timestamp: -1 });
 AudioEventSchema.index({ timestamp: -1 });
+AudioEventSchema.index({ tenantId: 1, timestamp: -1 });
 
 // ============================================
 // User Feedback Schema - Ratings and comments from users
 // ============================================
 const UserFeedbackSchema = new Schema({
+  tenantId: { type: String, index: true, default: 'global' },
   rating: { 
     type: Number, 
     required: true, 
@@ -113,12 +120,14 @@ const UserFeedbackSchema = new Schema({
 UserFeedbackSchema.index({ rating: 1, timestamp: -1 });
 UserFeedbackSchema.index({ timestamp: -1 });
 UserFeedbackSchema.index({ resolved: 1, timestamp: -1 });
+UserFeedbackSchema.index({ tenantId: 1, timestamp: -1 });
 
 // ============================================
 // Session Summary Schema - Aggregated session data
 // ============================================
 const SessionSummarySchema = new Schema({
-  sessionId: { type: String, required: true, unique: true, index: true },
+  tenantId: { type: String, index: true, default: 'global' },
+  sessionId: { type: String, required: true, index: true },
   firstSeen: { type: Date, required: true },
   lastSeen: { type: Date, required: true },
   totalRecognitions: { type: Number, default: 0 },
@@ -133,8 +142,10 @@ const SessionSummarySchema = new Schema({
   timestamps: true
 });
 
+SessionSummarySchema.index({ tenantId: 1, sessionId: 1 }, { unique: true });
 SessionSummarySchema.index({ firstSeen: -1 });
 SessionSummarySchema.index({ lastSeen: -1 });
+SessionSummarySchema.index({ tenantId: 1, lastSeen: -1 });
 
 // ============================================
 // Export Models

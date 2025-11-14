@@ -8,6 +8,7 @@ import { useTenant } from '../../shared/context/TenantContext.js';
 import { useTriggerMode } from '../../shared/context/TriggerModeContext.js';
 import { usePlayback } from '../../shared/context/PlaybackContext.js';
 import { fetchAllCoordinates } from '../services/gpsApi.js';
+import { useProgress, normalizeStopId } from '../../shared/context/ProgressContext.js';
 
 const DEFAULT_RADIUS_METERS = 35;
 
@@ -208,7 +209,12 @@ const formatDistance = (distance) => {
 
 const GpsMapScreen = ({ navigation, tenantConfig }) => {
   const { config } = useTenant();
+  const { isStopVisited, getStopMeta } = useProgress();
   const colors = config.COLORS || {};
+  const headerTitle = config.PARK_INFO?.name || config.APP_NAME || 'Audioguia';
+  const headerSubtitle =
+    config.GPS?.headerSubtitle ||
+    'Sigue la ruta, descubre monumentos y escucha sus historias';
   const styles = useMemo(() => createStyles(colors), [colors]);
   const gpsSettings = config.GPS || tenantConfig?.gps || {};
   const triggerRadius =
@@ -230,6 +236,25 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
   const [nearestMonument, setNearestMonument] = useState(null);
   const [isWebMapLoaded, setIsWebMapLoaded] = useState(!isWeb);
   const [pendingAutoMessage, setPendingAutoMessage] = useState(null);
+  const enhancedMonuments = useMemo(() => {
+    if (!Array.isArray(monuments)) return [];
+    return monuments.map((monument) => {
+      const normalizedId = normalizeStopId(monument?.id);
+      const stopMeta = getStopMeta ? getStopMeta(monument?.id) : null;
+      const itineraryOrder =
+        (stopMeta && typeof stopMeta.order === 'number' && stopMeta.order) ||
+        (typeof monument?.itineraryOrder === 'number'
+          ? monument.itineraryOrder
+          : null) ||
+        (typeof monument?.order === 'number' ? monument.order : null);
+
+      return {
+        ...monument,
+        normalizedId,
+        itineraryOrder,
+      };
+    });
+  }, [monuments, getStopMeta]);
   const { mode: triggerMode } = useTriggerMode();
   const isAutoMode = triggerMode === 'auto';
   const { isPlaying } = usePlayback();
@@ -319,67 +344,135 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
     });
   }, [navigation, setPendingAutoMessage]);
 
-  const evaluateProximity = useCallback((coords, referenceMonuments) => {
-    const points = referenceMonuments || monuments;
-    if (!coords || !Array.isArray(points) || points.length === 0) {
-      setNearestMonument(null);
-      return;
-    }
+  const selectAutoCandidate = useCallback(
+    (entries = []) => {
+      const candidates = entries
+        .filter(
+          (entry) =>
+            entry &&
+            typeof entry.distance === 'number' &&
+            entry.distance <= triggerRadius &&
+            !isStopVisited(entry.id),
+        )
+        .sort((a, b) => {
+          const orderA =
+            typeof a.itineraryOrder === 'number'
+              ? a.itineraryOrder
+              : Number.MAX_SAFE_INTEGER;
+          const orderB =
+            typeof b.itineraryOrder === 'number'
+              ? b.itineraryOrder
+              : Number.MAX_SAFE_INTEGER;
+          if (orderA !== orderB) return orderA - orderB;
+          return (a.distance || Infinity) - (b.distance || Infinity);
+        });
 
-    let nearest = null;
-    let minDistance = Number.POSITIVE_INFINITY;
+      return candidates.length ? candidates[0] : null;
+    },
+    [isStopVisited, triggerRadius],
+  );
 
-    points.forEach((monument) => {
-      const { coordinates } = monument || {};
-      if (coordinates && typeof coordinates.latitude === 'number' && typeof coordinates.longitude === 'number') {
-        const distance = calculateDistanceMeters(
-          coords.latitude,
-          coords.longitude,
-          coordinates.latitude,
-          coordinates.longitude,
-        );
-
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearest = { ...monument, distance };
-        }
+  const evaluateProximity = useCallback(
+    (coords, referenceMonuments) => {
+      const points = referenceMonuments || enhancedMonuments;
+      if (!coords || !Array.isArray(points) || points.length === 0) {
+        setNearestMonument(null);
+        return;
       }
-    });
 
-    setNearestMonument(nearest);
+      const withDistance = points.map((monument) => {
+        const { coordinates } = monument || {};
+        let distance = null;
+        if (
+          coordinates &&
+          typeof coordinates.latitude === 'number' &&
+          typeof coordinates.longitude === 'number'
+        ) {
+          distance = calculateDistanceMeters(
+            coords.latitude,
+            coords.longitude,
+            coordinates.latitude,
+            coordinates.longitude,
+          );
+        }
+        return { ...monument, distance };
+      });
 
-    if (!nearest) return;
+      let nearest = null;
+      let minDistance = Number.POSITIVE_INFINITY;
+      withDistance.forEach((entry) => {
+        if (typeof entry.distance === 'number' && entry.distance < minDistance) {
+          minDistance = entry.distance;
+          nearest = entry;
+        }
+      });
 
-    const lastTriggered = lastTriggeredRef.current;
+      setNearestMonument(nearest);
+      const lastTriggered = lastTriggeredRef.current;
 
-    if (nearest.distance <= triggerRadius) {
+      const resetTriggerIfAway = () => {
+        if (
+          lastTriggered &&
+          nearest &&
+          lastTriggered.id === nearest.id &&
+          typeof nearest.distance === 'number' &&
+          nearest.distance > triggerRadius * 1.5
+        ) {
+          lastTriggeredRef.current = null;
+        }
+      };
+
       if (!isAutoMode) {
+        resetTriggerIfAway();
+        return;
+      }
+
+      const candidate = selectAutoCandidate(withDistance);
+
+      if (!candidate) {
+        resetTriggerIfAway();
         return;
       }
 
       if (isPlaying) {
-        pendingMonumentRef.current = nearest;
+        pendingMonumentRef.current = candidate;
         setPendingAutoMessage(
-          `Reproducción en curso. Abriremos ${nearest.name || nearest.id} al terminar.`,
+          'Terminaremos ' + (candidate.name || candidate.id) + ' antes de avanzar.',
         );
-        lastTriggeredRef.current = { id: nearest.id, distance: nearest.distance };
+        lastTriggeredRef.current = {
+          id: candidate.id,
+          distance: candidate.distance,
+        };
         return;
       }
 
-      if (!lastTriggered || lastTriggered.id !== nearest.id) {
-        lastTriggeredRef.current = { id: nearest.id, distance: nearest.distance };
+      if (!lastTriggered || lastTriggered.id !== candidate.id) {
+        lastTriggeredRef.current = {
+          id: candidate.id,
+          distance: candidate.distance,
+        };
         setPendingAutoMessage(null);
-        navigateToMonument(nearest, false);
+        navigateToMonument(candidate, false);
       } else {
-        lastTriggeredRef.current = { ...lastTriggered, distance: nearest.distance };
+        lastTriggeredRef.current = {
+          ...lastTriggered,
+          distance: candidate.distance,
+        };
       }
-    } else if (lastTriggered && lastTriggered.id === nearest.id && nearest.distance > triggerRadius * 1.5) {
-      lastTriggeredRef.current = null;
-    }
-  }, [monuments, triggerRadius, isAutoMode, isPlaying, navigateToMonument]);
+    },
+    [
+      enhancedMonuments,
+      isAutoMode,
+      isPlaying,
+      navigateToMonument,
+      selectAutoCandidate,
+      triggerRadius,
+    ],
+  );
+
 
   useEffect(() => {
-    if (!monuments.length) return undefined;
+    if (!enhancedMonuments.length) return undefined;
 
     if (Platform.OS === 'web') {
       const hasGeolocation = typeof navigator !== 'undefined' && !!navigator.geolocation;
@@ -429,7 +522,7 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
         };
 
         setUserLocation(initialCoords);
-        evaluateProximity(initialCoords, monuments);
+        evaluateProximity(initialCoords);
 
         watchSubscriptionRef.current = await Location.watchPositionAsync({
           accuracy: Location.Accuracy.Highest,
@@ -441,7 +534,7 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
             longitude: position.coords.longitude,
           };
           setUserLocation(coords);
-          evaluateProximity(coords, monuments);
+          evaluateProximity(coords);
         });
       } catch (error) {
         console.error('GpsMapScreen: Error obtaining location', error);
@@ -458,7 +551,7 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
         watchSubscriptionRef.current = null;
       }
     };
-  }, [monuments, evaluateProximity]);
+  }, [enhancedMonuments, evaluateProximity]);
 
   useEffect(() => {
     return () => {
@@ -473,12 +566,12 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
     if (!payload || payload.type !== 'MARKER_SELECTED' || !payload.monumentId) {
       return;
     }
-    const monument = monuments.find((item) => item.id === payload.monumentId);
+    const monument = enhancedMonuments.find((item) => item.id === payload.monumentId);
     if (monument) {
       lastTriggeredRef.current = { id: monument.id, distance: 0 };
       navigateToMonument(monument, true);
     }
-  }, [monuments, navigateToMonument]);
+  }, [enhancedMonuments, navigateToMonument]);
 
   const handleMarkerSelected = useCallback((event) => {
     try {
@@ -511,9 +604,9 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
   }, [isAutoMode, isPlaying, navigateToMonument]);
 
   const sortedMonuments = useMemo(() => {
-    if (!Array.isArray(monuments)) return [];
+    if (!Array.isArray(enhancedMonuments)) return [];
 
-    return monuments
+    return enhancedMonuments
       .map((monument) => {
         const distance = (userLocation && monument.coordinates)
           ? calculateDistanceMeters(
@@ -531,7 +624,7 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
         if (b.distance == null) return -1;
         return a.distance - b.distance;
       });
-  }, [monuments, userLocation]);
+  }, [enhancedMonuments, userLocation]);
 
   const mapHtml = useMemo(
     () =>
@@ -626,8 +719,8 @@ const GpsMapScreen = ({ navigation, tenantConfig }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTitles}>
-          <Text style={styles.title}>Parque Europa</Text>
-          <Text style={styles.subtitle}>Sigue la ruta, descubre monumentos y escucha sus historias</Text>
+          <Text style={styles.title}>{headerTitle}</Text>
+          <Text style={styles.subtitle}>{headerSubtitle}</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')} style={styles.settingsButton}>
           <Ionicons name="settings-outline" size={22} color={colors.PRIMARY || '#2E8B57'} />

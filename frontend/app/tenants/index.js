@@ -1,6 +1,7 @@
 import museoFerrocarrilConfig from './museo_ferrocarril/config';
 import parqueEuropaConfig from './parque_europa/config';
 import bembibreConfig from './bembibre/config';
+import albaresRiberaConfig from './albares_ribera/config';
 
 export const DEFAULT_TENANT_ID = 'parque_europa';
 
@@ -22,6 +23,12 @@ export const tenants = {
     type: 'type2',
     config: bembibreConfig,
     aliases: ['bembibre', 'bierzoalto'],
+  },
+  albares_ribera: {
+    id: 'albares_ribera',
+    type: 'type2',
+    config: albaresRiberaConfig,
+    aliases: ['albares', 'albaresribera', 'valleboeza'],
   },
 };
 

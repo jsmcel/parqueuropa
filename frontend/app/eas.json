@@ -20,10 +20,18 @@
     "web-parque-europa": {
       "env": {
         "EXPO_PUBLIC_TENANT_ID": "parque_europa",
-        "EXPO_PUBLIC_API_URL": "https://api.parqueuropa.guidaitor.es"
+        "EXPO_PUBLIC_API_URL": "https://guideitor.ethcuela.es"
       },
       "buildCommand": "npx expo export --platform web --output-dir dist/web-parque-europa",
       "outputDirectory": "dist/web-parque-europa"
+    },
+    "web-bembibre": {
+      "env": {
+        "EXPO_PUBLIC_TENANT_ID": "bembibre",
+        "EXPO_PUBLIC_API_URL": "https://guideitor.ethcuela.es"
+      },
+      "buildCommand": "npx expo export --platform web --output-dir dist/web-bembibre",
+      "outputDirectory": "dist/web-bembibre"
     }
   },
   "submit": {

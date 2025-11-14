@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "defaultTriggerRadiusMeters": 35,
+    "itineraryLengthKm": 2.1,
+    "itineraryDurationMinutes": 95,
+    "totalStops": 9
+  },
+  "monuments": {
+    "rio-boeza-ponton": {
+      "id": "rio-boeza-ponton",
+      "name": "El Pontón y las rutas jacobeas",
+      "category": "historico",
+      "summary": "Paso histórico sobre el Boeza donde convergían el Camino Real, la Vía Kúnig y la ruta de Manzanal.",
+      "story": "Durante siglos, el único modo de cruzar el Boeza era una pasarela de madera conocida como El Pontón. Por aquí viajaban comerciantes, arrieros y peregrinos que elegían rutas alternativas al colapsado Camino Francés. Las crónicas de 1515 relatan cómo dos romeros franceses se ahogaron en este punto, recordándonos los peligros del viaje. Junto a la plaza de la Ermita también se levantaban la Vera Cruz y San Antonio de Padua, santo principal de las fiestas locales.",
+      "itineraryOrder": 1,
+      "coordinates": {
+        "latitude": 42.60850310629878,
+        "longitude": -6.365924832530711
+      }
+    },
+    "la-reguera": {
+      "id": "la-reguera",
+      "name": "La Reguera",
+      "category": "paisaje",
+      "summary": "Acequia comunal que distribuía el agua del Boeza y alimentaba las huertas del valle.",
+      "story": "La Reguera no es un arroyo natural, sino una obra colectiva que sangraba el Boeza aguas arriba para regar bancales y frutales. Gracias a este sistema hidráulico florecieron las huertas y se sostuvo la economía doméstica de Albares.",
+      "itineraryOrder": 2,
+      "coordinates": {
+        "latitude": 42.610414,
+        "longitude": -6.36674
+      }
+    },
+    "plaza-mayor-albares": {
+      "id": "plaza-mayor-albares",
+      "name": "Plaza Mayor y Casa de Sabugo",
+      "category": "historico",
+      "summary": "Corazón civil de Albares, escenario de la Casa Consistorial y de la memoria del Filandón.",
+      "story": "La actual Plaza de Antonio Alonso fue el centro político del municipio hasta que en 1941 el ayuntamiento se trasladó forzosamente a Torre del Bierzo. El testimonio de Álvarez 'Patón' recuerda la camioneta que se llevó los muebles municipales. Aquí también se encuentra la Casa de Sabugo y se rodó la película 'El Filandón', que inmortalizó la tradición oral berciana.",
+      "itineraryOrder": 3,
+      "coordinates": {
+        "latitude": 42.60731693414165,
+        "longitude": -6.365529326057245
+      }
+    },
+    "iglesia-san-millan-albares": {
+      "id": "iglesia-san-millan-albares",
+      "name": "Iglesia de San Millán",
+      "category": "historico",
+      "summary": "Templo de los siglos XVI-XVII con artesonados mudéjares y un retablo barroco dedicado a San Millán.",
+      "story": "La portada meridional y la espadaña de 1850 protegen un interior de tres naves con restos mudéjares y un retablo barroco coronado por un calvario del XVII. En 1809 las tropas napoleónicas profanaron el templo: saquearon alhajas, encendieron hogueras y lo dejaron \"lleno de excrementos\", según el vicario Miguel de Olano.",
+      "itineraryOrder": 4,
+      "coordinates": {
+        "latitude": 42.608053889233865,
+        "longitude": -6.364648711370833
+      }
+    },
+    "barrio-sardon-la-era": {
+      "id": "barrio-sardon-la-era",
+      "name": "Barrio Sardón y La Era",
+      "category": "historico",
+      "summary": "Espacio comunal donde se trillaba el cereal frente a la moderna autovía A-6.",
+      "story": "La Era fue durante siglos el centro de la economía de subsistencia: aquí se trillaba el cereal que sostenía a las familias. Hoy convive con el rumor de la autovía A-6 y del polígono de Valderreguera, reflejando la transición del antiguo Camino Real al corredor logístico contemporáneo.",
+      "itineraryOrder": 5,
+      "coordinates": {
+        "latitude": 42.60664697530841,
+        "longitude": -6.363480632071499
+      }
+    },
+    "fuente-del-bosque-albares": {
+      "id": "fuente-del-bosque-albares",
+      "name": "Fuente del Bosque",
+      "category": "paisaje",
+      "summary": "Fuente comunal y lugar de encuentro para recoger agua antes de la red doméstica.",
+      "story": "Antes de que el agua corriente llegara a cada casa, la Fuente del Bosque era el punto cotidiano para llenar cántaros, compartir noticias y tejer la red social del pueblo. El murmullo del agua acompaña todavía esas historias.",
+      "itineraryOrder": 6,
+      "coordinates": {
+        "latitude": 42.606173549171444,
+        "longitude": -6.365851382420196
+      }
+    },
+    "huerta-grande-albares": {
+      "id": "huerta-grande-albares",
+      "name": "Huerta Grande · Villa Antolín",
+      "category": "paisaje",
+      "summary": "Finca de tres hectáreas que el arzobispo Antolín López Peláez convirtió en su villa y que hoy es espacio vecinal.",
+      "story": "Antolín López Peláez, arzobispo de Tarragona, definió este lugar como su \"villa romana sin esclavos y con habitaciones cómodas\". La Junta Vecinal la transformó en sede de convivencias y festivales, y existe un plan para habilitar un museo, un albergue y equipamientos culturales financiados con fondos de reindustrialización minera.",
+      "itineraryOrder": 7,
+      "coordinates": {
+        "latitude": 42.608066808224955,
+        "longitude": -6.368056375684193
+      }
+    },
+    "barrio-botillo-albares": {
+      "id": "barrio-botillo-albares",
+      "name": "Barrio Botillo",
+      "category": "gastronomia",
+      "summary": "Calles populares ligadas al botillo, las galletas de San Antonio y los productos de la huerta berciana.",
+      "story": "El nombre del barrio evoca la Indicación Geográfica Protegida Botillo del Bierzo. Aquí la cocina local reúne empanadas de acelga, caldos de vainas o castañas, bacalao con huevos duros y postres como las galletas de San Antonio, regados con vino mencía y orujo.",
+      "itineraryOrder": 8,
+      "coordinates": {
+        "latitude": 42.607148963945946,
+        "longitude": -6.368341527728259
+      }
+    },
+    "camino-ventas-albares": {
+      "id": "camino-ventas-albares",
+      "name": "Camino a Las Ventas",
+      "category": "historico",
+      "summary": "Tramo final hacia el Puente de Lagares, paso obligado a las ferias y mercados de Bembibre.",
+      "story": "En 1835 el concejo pidió ayuda para mantener este puente porque era el paso obligatorio para acudir a las ferias de Bembibre. El Puente de Lagares, también llamado de Las Ventas, fue el motor comercial que conectó Albares con el resto de la comarca durante siglos. Hoy un paseo de dos kilómetros permite revivir ese trayecto.",
+      "itineraryOrder": 9,
+      "coordinates": {
+        "latitude": 42.60683786962033,
+        "longitude": -6.371289403599734
+      }
+    }
+  }
+}

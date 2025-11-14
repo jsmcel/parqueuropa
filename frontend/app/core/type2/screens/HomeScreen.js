@@ -485,7 +485,7 @@ const HomeScreen = ({ navigation }) => {
       slides.push({
         key: 'default-hero',
         slug: 'hero',
-        title: config.PARK_INFO?.name || config.APP_NAME || 'Parque Europa',
+        title: config.PARK_INFO?.name || config.APP_NAME || 'Audioguia',
         subtitle: config.PARK_INFO?.location || '',
         imageSource:
           config.ASSETS?.heroBanner ||
@@ -526,7 +526,8 @@ const HomeScreen = ({ navigation }) => {
       }
     };
   }, [homeIntroAudioUrl]);
-  const itinerarySectionTitle = config.ITINERARY_SECTION_TITLE || 'Itinerario Parque Europa';
+  const itinerarySectionTitle =
+    config.ITINERARY_SECTION_TITLE || 'Itinerario del recorrido';
   const ensureHomeIntroSound = async () => {
     if (homeIntroSoundRef.current) return homeIntroSoundRef.current;
     if (!homeIntroAudioUrl) return null;

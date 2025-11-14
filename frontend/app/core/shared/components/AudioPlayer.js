@@ -31,6 +31,7 @@ const WebAudioPlayer = forwardRef(({
   styles,
   colors,
   onPlaybackChange,
+  onPlaybackComplete,
 }, ref) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -67,6 +68,9 @@ const WebAudioPlayer = forwardRef(({
     const handleEnded = () => {
       updateIsPlaying(false);
       setCurrentTime(0);
+      if (onPlaybackComplete) {
+        onPlaybackComplete();
+      }
     };
 
     audio.addEventListener('loadstart', handleLoadStart);
@@ -269,6 +273,7 @@ const MobileAudioPlayer = forwardRef(({
   styles,
   colors,
   onPlaybackChange,
+  onPlaybackComplete,
 }, ref) => {
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -422,8 +427,11 @@ const MobileAudioPlayer = forwardRef(({
          console.log("AudioPlayer: Playback finished.");
          notifyIsPlaying(false);
          setPlaybackPosition(0);
+         if (onPlaybackComplete) {
+           onPlaybackComplete();
+         }
      }
-  }, [onPlaybackStatusUpdateProp, onError]);
+  }, [onPlaybackStatusUpdateProp, onError, onPlaybackComplete, notifyIsPlaying]);
 
   // --- Controles de Reproducción ---
   const handlePlayPause = async () => {

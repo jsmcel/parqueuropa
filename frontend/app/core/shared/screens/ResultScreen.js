@@ -24,6 +24,7 @@ import { getAudioFileUrl } from '../services/apiService.js'; // Import the new s
 import { usePlayback } from '../context/PlaybackContext.js';
 import { responsiveStyles } from '../styles/responsiveStyles.js';
 import { useTenantMedia } from '../context/TenantMediaContext.js';
+import { useProgress } from '../context/ProgressContext.js';
 
 const resolveAssetUri = (source) => {
   if (!source) return null;
@@ -60,6 +61,22 @@ const getItemImageUri = (item) => {
     return resolveAssetUri(item.image);
   }
   return null;
+};
+
+const slugifyForHashtag = (value = '') =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '');
+
+const buildShareCopy = (config) => {
+  const target = config?.PARK_INFO?.name || config?.APP_NAME || 'esta ruta';
+  const fallbackSlug = slugifyForHashtag(target);
+  const fallbackHashtag = fallbackSlug ? `#${fallbackSlug}` : '#Audioguia';
+  return {
+    target,
+    hashtag: config?.SHARE_HASHTAG || fallbackHashtag,
+  };
 };
 
 // Función para comprimir imágenes en web para ahorrar espacio en localStorage
@@ -184,6 +201,7 @@ const ResultScreen = ({ route, navigation }) => {
   const { pieceName, confidence, userSelected } = recognitionResult || {};
 
   const { config, type } = useTenant();
+  const { markStopVisited } = useProgress();
   const { data: mediaData } = useTenantMedia();
   const sliderMonuments = Array.isArray(mediaData?.sliderManifest?.monuments)
     ? mediaData.sliderManifest.monuments
@@ -219,6 +237,7 @@ const ResultScreen = ({ route, navigation }) => {
   const styles = useMemo(() => createStyles(colors, fonts), [colors, fonts]);
   const tenantId = config?.TENANT_ID || 'default';
   const placeholderLarge = config?.ASSETS?.placeholderLarge || require('../assets/images/placeholder_large.png');
+  const shareCopy = useMemo(() => buildShareCopy(config), [config]);
 
   const [displayImageUri, setDisplayImageUri] = useState(routeImageUri || null);
   const [selectedMode, setSelectedMode] = useState(initialAudioMode || 'normal');
@@ -373,7 +392,7 @@ const ResultScreen = ({ route, navigation }) => {
     if (!pieceName) return;
     try {
       await Share.share({
-        message: `Estoy recorriendo el Parque Europa y la parada "${pieceName}" con la audioguía. ¡Te va a encantar! #ParqueEuropa`,
+        message: `Estoy recorriendo ${shareCopy.target} y la parada "${pieceName}" con la audioguia. Te va a encantar! ${shareCopy.hashtag}`,
         title: `Parada: ${pieceName}`
       });
     } catch (error) {
@@ -381,6 +400,12 @@ const ResultScreen = ({ route, navigation }) => {
       Alert.alert("Error", "No se pudo compartir la información.");
     }
   };
+
+  const handlePlaybackComplete = useCallback(() => {
+    if (pieceName) {
+      markStopVisited(pieceName);
+    }
+  }, [pieceName, markStopVisited]);
 
   // --- NEW: Handler para volver a Inicio ---
   const handleGoHome = async () => {
@@ -633,6 +658,7 @@ const ResultScreen = ({ route, navigation }) => {
                   autoPlay={autoPlayPref}
                   onError={handleAudioError}
                   ref={audioPlayerRef}
+                  onPlaybackComplete={handlePlaybackComplete}
                 />
               ) : (
                 <View style={styles.audioPlayerPlaceholder}>
@@ -835,6 +861,7 @@ const ResultScreen = ({ route, navigation }) => {
                 autoPlay={autoPlayPref}
                 onError={handleAudioError}
                 ref={audioPlayerRef}
+                onPlaybackComplete={handlePlaybackComplete}
               />
           ) : (
               <View style={styles.audioPlayerPlaceholder}>
