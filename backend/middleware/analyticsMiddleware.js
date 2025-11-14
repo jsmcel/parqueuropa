@@ -37,10 +37,13 @@ function analyticsMiddleware(req, res, next) {
   // Generate session ID
   const ip = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
   const userAgent = req.get('User-Agent') || 'unknown';
-  const sessionId = generateSessionId(ip, userAgent);
+  const tenantId = resolveTenantId(req);
+  const rawSessionId = generateSessionId(ip, userAgent);
+  const scopedSessionId = tenantId ? `${tenantId}:${rawSessionId}` : rawSessionId;
 
   // Add sessionId to request for use in other parts of the app
-  req.analyticsSessionId = sessionId;
+  req.analyticsSessionId = scopedSessionId;
+  req.analyticsTenantId = tenantId;
 
   // Override res.send to capture response time
   res.send = function(data) {
@@ -48,7 +51,7 @@ function analyticsMiddleware(req, res, next) {
     
     // Track the API event asynchronously (don't block the response)
     setImmediate(() => {
-      trackApiEvent(req, res, responseTime, sessionId, ip, userAgent).catch(err => {
+      trackApiEvent(req, res, responseTime, scopedSessionId, ip, userAgent).catch(err => {
         console.error('Error tracking API event:', err);
       });
     });
@@ -62,7 +65,7 @@ function analyticsMiddleware(req, res, next) {
     
     // Track the API event asynchronously (don't block the response)
     setImmediate(() => {
-      trackApiEvent(req, res, responseTime, sessionId, ip, userAgent).catch(err => {
+      trackApiEvent(req, res, responseTime, scopedSessionId, ip, userAgent).catch(err => {
         console.error('Error tracking API event:', err);
       });
     });
@@ -78,7 +81,7 @@ function analyticsMiddleware(req, res, next) {
  */
 async function trackApiEvent(req, res, responseTime, sessionId, ip, userAgent) {
   try {
-    const tenantId = resolveTenantId(req);
+    const tenantId = req.analyticsTenantId || resolveTenantId(req);
     const apiEvent = new ApiEvent({
       tenantId,
       endpoint: req.path,
